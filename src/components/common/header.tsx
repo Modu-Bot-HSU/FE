@@ -19,14 +19,6 @@ export default function header({ isLogin }: HeaderProps) {
             >
               홈
             </NavLink>
-            <NavLink
-              to="/api-test"
-              className={({ isActive }) =>
-                isActive ? "text-white" : "hover:text-white"
-              }
-            >
-              API 테스트
-            </NavLink>
             <span>{isLogin ? "로그인됨" : "로그아웃됨"}</span>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import CustomInput from "../../components/common/Input";
-import { useWalletLogin } from "./useWalletLogin.tsx";
+import { useWalletLogin } from "./useWalletLogin";
 
 const Login = () => {
   const { walletAddress, handleWalletChange, handleLoginFlow, isPending, navigate } =

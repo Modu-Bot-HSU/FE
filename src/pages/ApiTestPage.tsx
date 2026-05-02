@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
-type HttpMethod = "POST";
+type HttpMethod = "GET" | "POST";
 
 type ApiResult = {
   status: string;
@@ -21,7 +21,7 @@ type NftGood = {
   owner: string | null;
 };
 
-const DEFAULT_BASE_URL = "https://modubot.shop";
+const DEFAULT_BASE_URL = "/api";
 
 export default function ApiTestPage() {
   const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE_URL);
@@ -47,7 +47,7 @@ export default function ApiTestPage() {
   async function callApi(
     endpoint: string,
     method: HttpMethod,
-    body?: Record<string, string>,
+    body?: Record<string, string | number>,
   ): Promise<ApiResult> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -83,7 +83,7 @@ export default function ApiTestPage() {
     e.preventDefault();
     setLoadingKey("goods");
     try {
-      const result = await callApi("/blockchain/nft/goods", "POST");
+      const result = await callApi("/blockchain/nft/goods", "GET");
       setGoodsResult(result);
       
       // 응답이 성공이면 NFT 배열 파싱
@@ -115,8 +115,8 @@ export default function ApiTestPage() {
     e.preventDefault();
     setLoadingKey("purchase");
     try {
-      const result = await callApi("/blockchain/nftpurchase", "POST", {
-        index: purchaseIndex,
+      const result = await callApi("/blockchain/nft/purchase", "POST", {
+        index: Number(purchaseIndex),
       });
       setPurchaseResult(result);
     } catch (error) {
@@ -157,6 +157,10 @@ export default function ApiTestPage() {
         배포 서버에 직접 요청해서 보상 지급, NFT 상점 조회, NFT 구매를 빠르게
         점검할 수 있습니다.
       </p>
+      <p className="mb-6 text-xs text-amber-300">
+        개발 환경(localhost)에서는 CORS 이슈를 피하기 위해 Base URL을 /api로 두는
+        것을 권장합니다.
+      </p>
 
       <section className="mb-6 grid gap-4 rounded-xl border border-white/10 bg-black/30 p-4">
         <label className="text-sm font-medium">Base URL</label>
@@ -164,7 +168,7 @@ export default function ApiTestPage() {
           className="rounded-lg border border-white/20 bg-black/40 px-3 py-2 outline-none"
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.target.value)}
-          placeholder="https://modubot.shop"
+          placeholder="/api"
         />
 
         <label className="text-sm font-medium">Access Token (옵션)</label>
@@ -184,7 +188,7 @@ export default function ApiTestPage() {
             disabled={loadingKey === "goods"}
             className="rounded-lg bg-sky-600 px-4 py-2 font-medium hover:bg-sky-500 disabled:opacity-50"
           >
-            {loadingKey === "goods" ? "요청 중..." : "POST /blockchain/nft/goods"}
+            {loadingKey === "goods" ? "요청 중..." : "GET /blockchain/nft/goods"}
           </button>
         </form>
         <ResultBox result={goodsResult} />
@@ -208,7 +212,7 @@ export default function ApiTestPage() {
           >
             {loadingKey === "purchase"
               ? "요청 중..."
-              : "POST /blockchain/nftpurchase"}
+              : "POST /blockchain/nft/purchase"}
           </button>
         </form>
         <ResultBox result={purchaseResult} />
