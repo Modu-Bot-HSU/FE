@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "../../hooks/useForm";
 import {
   buildPersonalSignPayload,
-  extractAccessToken,
   getNonce,
   login,
   normalizeWalletAddress,
+  saveAuthTokens,
   type LoginRequest,
-} from "../../apis/auth/auth";
+} from "../../apis/auth/auth.ts";
 
 const alertEthereumFlowError = (error: unknown) => {
   if (error instanceof Error && error.message) {
@@ -45,13 +45,10 @@ export const useWalletLogin = () => {
   const loginMutation = useMutation({
     mutationFn: (data: LoginRequest) => login(data),
     onSuccess: (data) => {
-      const accessToken = extractAccessToken(data);
-      if (accessToken) {
-        localStorage.setItem("accessToken", accessToken);
-      }
+      saveAuthTokens(data);
       alert("로그인에 성공하였습니다!");
       console.log("로그인 응답:", data);
-      navigate("/");
+      navigate("/campus");
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : "로그인 실패";

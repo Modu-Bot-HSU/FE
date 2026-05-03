@@ -20,6 +20,7 @@ export interface MessageResponse {
 export interface SignUpResponse {
   nonce?: number | string;
   accessToken?: string;
+  refreshToken?: string;
 }
 
 export interface NonceRequest {
@@ -37,6 +38,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   accessToken?: string;
+  refreshToken?: string;
   token?: string;
   jwt?: string;
   [key: string]: unknown;
@@ -44,6 +46,7 @@ export interface LoginResponse {
 
 export interface RefreshResponse {
   accessToken?: string;
+  refreshToken?: string;
   token?: string;
   jwt?: string;
   [key: string]: unknown;
@@ -66,6 +69,34 @@ export const extractAccessToken = (
   const payload = response as Record<string, unknown>;
   const token = payload.accessToken ?? payload.token ?? payload.jwt;
   return typeof token === "string" && token.length > 0 ? token : null;
+};
+
+export const extractRefreshToken = (
+  response: LoginResponse | SignUpResponse | RefreshResponse,
+): string | null => {
+  const payload = response as Record<string, unknown>;
+  const token = payload.refreshToken;
+  return typeof token === "string" && token.length > 0 ? token : null;
+};
+
+export const saveAuthTokens = (
+  response: LoginResponse | SignUpResponse | RefreshResponse,
+) => {
+  const accessToken = extractAccessToken(response);
+  const refreshToken = extractRefreshToken(response);
+
+  if (accessToken) {
+    localStorage.setItem("accessToken", accessToken);
+  }
+
+  if (refreshToken) {
+    localStorage.setItem("refreshToken", refreshToken);
+  }
+};
+
+export const clearAuthTokens = () => {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
 };
 
 const BASE_URL = "https://modubot.shop";
@@ -94,8 +125,8 @@ const parseResponse = async <TResponse>(response: Response): Promise<TResponse> 
   return body as TResponse;
 };
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("accessToken");
+const getAuthHeaders = (tokenKey: "accessToken" | "refreshToken" = "accessToken") => {
+  const token = localStorage.getItem(tokenKey);
   const headers: Record<string, string> = {};
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -176,7 +207,7 @@ export const refreshAccessToken = async (): Promise<RefreshResponse> => {
   const response = await fetch(`${BASE_URL}/auth/refresh`, {
     method: "GET",
     headers: {
-      ...getAuthHeaders(),
+      ...getAuthHeaders("refreshToken"),
     },
   });
 
