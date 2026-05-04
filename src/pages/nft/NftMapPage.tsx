@@ -9,18 +9,14 @@ import {
 import CampusMapBottomSheet from "./components/CampusMapBottomSheet";
 import MapMarker from "./components/MapMarker";
 
-type MarkerConfig = {
-  index: number;
-  fallbackLabel: string;
-  x: string;
-  y: string;
-};
-
-const MAP_MARKERS: MarkerConfig[] = [
-  { index: 0, fallbackLabel: "Main Library", x: "77%", y: "16%" },
-  { index: 1, fallbackLabel: "Science Hall", x: "70%", y: "54%" },
-  { index: 2, fallbackLabel: "Student Union", x: "24%", y: "88%" },
-  { index: 3, fallbackLabel: "Main Building", x: "30%", y: "44%" },
+// 아이템 순서(0-based)에 대응하는 마커 위치. 아이템이 늘어나면 위치를 추가하세요.
+const MARKER_POSITIONS: { x: string; y: string }[] = [
+  { x: "77%", y: "16%" },
+  { x: "70%", y: "54%" },
+  { x: "24%", y: "88%" },
+  { x: "30%", y: "44%" },
+  { x: "50%", y: "30%" },
+  { x: "55%", y: "70%" },
 ];
 
 export default function NftMapPage() {
@@ -137,24 +133,35 @@ export default function NftMapPage() {
         </button>
       </div>
 
-      {/* 건물 마커 */}
-      {MAP_MARKERS.map((marker) => {
-        const item = getItem(marker.index);
-        const label = loading ? "..." : item?.name ?? marker.fallbackLabel;
-        const isSelected = selectedIndex === marker.index;
+      {/* 건물 마커 - API goods 기반 동적 렌더링 */}
+      {loading
+        ? MARKER_POSITIONS.slice(0, 4).map((pos, i) => (
+            <MapMarker
+              key={`skeleton-${i}`}
+              label="..."
+              x={pos.x}
+              y={pos.y}
+              isSold={false}
+              isSelected={false}
+              onClick={() => {}}
+            />
+          ))
+        : goods.map((item, i) => {
+            const pos = MARKER_POSITIONS[i] ?? { x: `${20 + i * 15}%`, y: `${20 + i * 15}%` };
+            const isSelected = selectedIndex === item.index;
 
-        return (
-          <MapMarker
-            key={marker.index}
-            label={label}
-            x={marker.x}
-            y={marker.y}
-            isSold={item?.isSold ?? false}
-            isSelected={isSelected}
-            onClick={() => handleMarkerClick(marker.index)}
-          />
-        );
-      })}
+            return (
+              <MapMarker
+                key={item.index}
+                label={item.name}
+                x={pos.x}
+                y={pos.y}
+                isSold={item.isSold}
+                isSelected={isSelected}
+                onClick={() => handleMarkerClick(item.index)}
+              />
+            );
+          })}
 
       <CampusMapBottomSheet
         item={selectedItem}

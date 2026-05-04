@@ -30,12 +30,12 @@ export default function CampusMapBottomSheet({
   const txHash = isSold ? item.txHash : null;
 
   return (
-    <div className="absolute inset-x-0 bottom-0 z-30 px-4 pb-4" onClick={(event) => event.stopPropagation()}>
+    <div className="absolute inset-x-0 bottom-0 z-30" onClick={(event) => event.stopPropagation()}>
       <div className="mx-auto mb-2 w-fit rounded-full bg-white/95 px-4 py-1 text-sm text-slate-700 shadow">
         {balanceText}
       </div>
 
-      <div className="rounded-t-3xl rounded-b-2xl bg-[#ececec] p-5 shadow-[0_-8px_24px_rgba(0,0,0,0.18)]">
+      <div className="rounded-t-3xl bg-[#ececec] p-5 shadow-[0_-8px_24px_rgba(0,0,0,0.18)]">
         <span
           className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${
             isSold
