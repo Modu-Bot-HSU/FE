@@ -122,15 +122,6 @@ export default function NftMapPage() {
           <span className="absolute mt-6 block h-0.5 w-4 bg-slate-700" />
         </button>
 
-        <button
-          onClick={(event) => {
-            event.stopPropagation();
-            navigate("/campus/collection");
-          }}
-          className="rounded-full bg-black/35 px-3 py-1.5 text-xs font-medium text-white backdrop-blur"
-        >
-          Collection
-        </button>
       </div>
 
       {/* 건물 마커 - API goods 기반 동적 렌더링 */}
