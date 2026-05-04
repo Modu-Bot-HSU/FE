@@ -2,28 +2,24 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getNftGoods, type NftGoodsItem } from "../../apis/blockchain/blockchain";
 
-// 지도 위 건물 배치 설정 (mockup 기준)
-type BuildingConfig = {
+type MarkerConfig = {
   index: number;
-  label: string;
-  x: number; // % 기준
-  y: number;
-  w: number;
-  h: number;
+  fallbackLabel: string;
+  x: string;
+  y: string;
 };
 
-const BUILDING_CONFIGS: BuildingConfig[] = [
-  { index: 0, label: "Main Library",   x: 7,  y: 12, w: 24, h: 18 },
-  { index: 1, label: "Science Hall",   x: 44, y: 8,  w: 21, h: 17 },
-  { index: 2, label: "Student Union",  x: 20, y: 52, w: 24, h: 17 },
-  { index: 3, label: "Clock Tower",    x: 54, y: 64, w: 15, h: 22 },
-  { index: 4, label: "Gymnasium",      x: 66, y: 30, w: 18, h: 14 },
+const MAP_MARKERS: MarkerConfig[] = [
+  { index: 0, fallbackLabel: "Main Library", x: "77%", y: "16%" },
+  { index: 1, fallbackLabel: "Science Hall", x: "70%", y: "54%" },
+  { index: 2, fallbackLabel: "Student Union", x: "24%", y: "88%" },
+  { index: 3, fallbackLabel: "Main Building", x: "30%", y: "44%" },
 ];
 
 export default function NftMapPage() {
   const navigate = useNavigate();
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
-  const [selected, setSelected] = useState<NftGoodsItem | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
@@ -37,131 +33,65 @@ export default function NftMapPage() {
 
   const getItem = (index: number) => goods.find((g) => g.index === index);
 
-  const handleBuildingClick = (index: number) => {
-    const item = getItem(index);
-    if (item) setSelected(item);
+  const handleMarkerClick = (index: number) => {
+    setSelectedIndex(index);
   };
 
+  const selectedItem = selectedIndex !== null ? getItem(selectedIndex) : null;
+
   return (
-    <div className="flex h-full flex-col bg-[#f0ede8]">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#f0ede8]">
-        <div className="flex items-center gap-2">
-          <button className="flex flex-col gap-1 p-1">
-            <span className="block h-0.5 w-5 bg-slate-700" />
-            <span className="block h-0.5 w-5 bg-slate-700" />
-            <span className="block h-0.5 w-5 bg-slate-700" />
-          </button>
-          <span className="text-lg font-semibold text-slate-800">Campus Map</span>
-        </div>
+    <div className="relative h-full overflow-hidden bg-[#95b75f]">
+      {/* 임시 목맵 배경 (실제 3D 이미지 전달 시 이 레이어를 이미지로 교체) */}
+      <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_30%_20%,#a6ca67_0%,#8eae52_45%,#7da348_100%)]" />
+      <div className="absolute -bottom-6 -left-8 h-40 w-64 rotate-3 rounded-[32px] bg-[#7c9f45]/70" />
+      <div className="absolute top-[24%] left-[8%] h-28 w-56 -rotate-6 rounded-[24px] bg-[#caa78a]/80 shadow-[0_16px_28px_rgba(0,0,0,0.18)]" />
+      <div className="absolute top-[37%] right-[7%] h-44 w-52 rotate-6 rounded-[26px] bg-[#d6b89c]/80 shadow-[0_20px_36px_rgba(0,0,0,0.2)]" />
+      <div className="absolute bottom-[20%] left-[6%] h-24 w-72 -rotate-2 rounded-[18px] bg-[#d9d2c9]/85 shadow-[0_14px_24px_rgba(0,0,0,0.16)]" />
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(to_top,#868177_0%,transparent_100%)]" />
+
+      {/* 상단 액션 */}
+      <div className="absolute left-4 right-4 top-3 z-20 flex items-start justify-between">
         <button
           onClick={() => navigate("/campus/collection")}
-          className="flex items-center gap-1 rounded-full bg-slate-800 px-3 py-1 text-xs text-white"
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 shadow"
+          aria-label="컬렉션 열기"
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          Collection →
+          <span className="block h-0.5 w-4 bg-slate-700" />
+          <span className="absolute mt-3 block h-0.5 w-4 bg-slate-700" />
+          <span className="absolute mt-6 block h-0.5 w-4 bg-slate-700" />
         </button>
+
       </div>
 
-      {/* 지도 영역 */}
-      <div className="relative flex-1 overflow-hidden mx-3 rounded-xl bg-[#e8e4de]">
-        {/* 도로 (수평) */}
-        <div className="absolute left-0 right-0 bg-[#d6d1ca]" style={{ top: "44%", height: "7%" }} />
-        {/* 도로 (수직) */}
-        <div className="absolute top-0 bottom-0 bg-[#d6d1ca]" style={{ left: "38%", width: "6%" }} />
+      {/* 건물 마커 */}
+      {MAP_MARKERS.map((marker) => {
+        const item = getItem(marker.index);
+        const label = loading ? "..." : item?.name ?? marker.fallbackLabel;
+        const isSelected = selectedIndex === marker.index;
 
-        {/* 건물 블록 */}
-        {BUILDING_CONFIGS.map((cfg) => {
-          const item = getItem(cfg.index);
-          const isOwned = item?.isSold ?? false;
-          const isSelected = selected?.index === cfg.index;
-
-          return (
-            <button
-              key={cfg.index}
-              onClick={() => handleBuildingClick(cfg.index)}
-              className="absolute flex flex-col items-center"
-              style={{
-                left: `${cfg.x}%`,
-                top: `${cfg.y}%`,
-                width: `${cfg.w}%`,
-              }}
-            >
-              <div
-                className={`w-full rounded transition-all ${
-                  isSelected
-                    ? "bg-slate-500 shadow-md"
-                    : isOwned
-                    ? "bg-slate-500"
-                    : "bg-slate-300"
-                }`}
-                style={{ height: `${cfg.h * 3}px` }}
-              />
-              <span className="mt-1 text-center text-[10px] leading-tight text-slate-600">
-                {loading ? "..." : (item?.name ?? cfg.label)}
-                {isOwned && " ✓"}
-              </span>
-            </button>
-          );
-        })}
-
-        {/* 줌 버튼 */}
-        <div className="absolute bottom-4 right-4 flex flex-col gap-1">
-          <button className="flex h-8 w-8 items-center justify-center rounded bg-white shadow text-slate-700 text-lg font-bold">
-            +
+        return (
+          <button
+            key={marker.index}
+            onClick={() => handleMarkerClick(marker.index)}
+            onDoubleClick={() => navigate(`/campus/${marker.index}`)}
+            className={`absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border px-3 py-1 text-sm shadow transition ${
+              isSelected
+                ? "border-slate-900 bg-slate-900 text-white"
+                : "border-slate-200 bg-white/95 text-slate-800"
+            }`}
+            style={{ left: marker.x, top: marker.y }}
+          >
+            <span className="inline-flex items-center gap-1.5">
+              {label}
+              {item?.isSold && (
+                <span className="h-2 w-2 rounded-full bg-orange-500" />
+              )}
+            </span>
           </button>
-          <button className="flex h-8 w-8 items-center justify-center rounded bg-white shadow text-slate-700 text-lg font-bold">
-            −
-          </button>
-        </div>
-      </div>
+        );
+      })}
 
-      {/* 하단 선택 시트 */}
-      <div
-        className={`transition-all duration-300 bg-white rounded-t-2xl shadow-lg overflow-hidden ${
-          selected ? "max-h-52" : "max-h-0"
-        }`}
-      >
-        {selected && (
-          <div className="px-5 py-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">{selected.name}</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  12 owners · Landmark · {selected.price} tokens
-                </p>
-              </div>
-              <button
-                onClick={() => navigate(`/campus/${selected.index}`)}
-                className="flex items-center gap-1 rounded-full bg-slate-900 px-4 py-1.5 text-sm font-medium text-white"
-              >
-                View →
-              </button>
-            </div>
-
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-2xl font-bold text-slate-900">
-                {selected.price} tokens
-              </span>
-            </div>
-
-            {selected.isSold && (
-              <span className="mt-2 inline-block rounded-full bg-red-100 px-3 py-0.5 text-xs text-red-600">
-                판매완료
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* 시트 닫기 영역 */}
-      {selected && (
-        <button
-          className="fixed inset-0 z-[-1]"
-          onClick={() => setSelected(null)}
-          aria-label="닫기"
-        />
-      )}
+      
     </div>
   );
 }
