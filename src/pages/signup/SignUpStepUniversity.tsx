@@ -45,7 +45,7 @@ export default function SignUpStepUniversity({
       </button>
       <ScreenTitle
         title="Create your account"
-        subtitle="Step 1 of 3 — Verify your university (Hansung @hansung.ac.kr)"
+        subtitle="Step 1 of 3 — Verify your university"
       />
       <div className="flex flex-col gap-4 flex-1">
         <AuthLabeledInput

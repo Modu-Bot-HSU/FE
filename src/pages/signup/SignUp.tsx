@@ -33,7 +33,7 @@ const SignUp = () => {
               /* mutation onError shows alert */
             }
           }}
-          onBack={() => navigate("/auth/login")}
+          onBack={() => navigate("/")}
         />
       ) : null}
 
@@ -85,7 +85,7 @@ const SignUp = () => {
           Already have an account?{" "}
           <button
             type="button"
-            onClick={() => navigate("/auth/login")}
+            onClick={() => navigate("/")}
             className="text-[#FF5C00] font-semibold underline"
           >
             Sign in

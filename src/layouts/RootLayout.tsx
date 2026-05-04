@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { shouldHideHeader } from "../utils/layout";
-import Header from "../components/common/Header.tsx";
+import Header from "../components/common/header.tsx";
 import MobileLayout from "../components/common/MobileLayout.tsx";
 
 export default function RootLayout() {

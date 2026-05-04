@@ -5,11 +5,11 @@ import { buildPersonalSignPayload, getNonce, normalizeWalletAddress } from "../.
 import { alertEthereumFlowError } from "./ethereumErrors";
 import { useLoginMutation } from "./useLoginMutation";
 
-export type LoginUiStep = "landing" | "wallet" | "confirm";
+export type LoginUiStep = "wallet" | "confirm";
 
 export const useWalletLogin = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<LoginUiStep>("landing");
+  const [step, setStep] = useState<LoginUiStep>("wallet");
   const [signingAddressRaw, setSigningAddressRaw] = useState("");
   const { values, handleChange, setValues } = useForm({ walletAddress: "" });
   const loginMutation = useLoginMutation();

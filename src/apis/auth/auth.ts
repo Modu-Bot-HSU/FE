@@ -1,3 +1,5 @@
+import { API_BASE_URL, getBearerAuthHeaders, parseApiResponse } from "../httpClient";
+
 export interface SignUpRequest {
   walletAddress: string;
   name: string;
@@ -17,6 +19,12 @@ export interface MessageResponse {
   message: string;
 }
 
+/** POST /auth/signup/request — nonce only until /auth/signin/verify */
+export interface SignUpNonceResponse {
+  nonce: string;
+}
+
+/** @deprecated use SignUpNonceResponse; verify returns login shape */
 export interface SignUpResponse {
   nonce?: number | string;
   accessToken?: string;
@@ -68,67 +76,33 @@ export const extractAccessToken = (
   return typeof token === "string" && token.length > 0 ? token : null;
 };
 
-const BASE_URL = "https://modubot.shop";
-
-const parseResponse = async <TResponse>(response: Response): Promise<TResponse> => {
-  let body: unknown = null;
-  try {
-    body = await response.json();
-  } catch {
-    body = null;
-  }
-
-  if (!response.ok) {
-    let message = `Request failed with status ${response.status}`;
-    if (typeof body === "object" && body !== null && "message" in body) {
-      const raw = (body as { message?: unknown }).message;
-      if (typeof raw === "string") {
-        message = raw;
-      } else if (Array.isArray(raw) && raw.every((item) => typeof item === "string")) {
-        message = (raw as string[]).join(", ");
-      }
-    }
-    throw new Error(message);
-  }
-
-  return body as TResponse;
-};
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("accessToken");
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-  return headers;
-};
-
 const postWithFetch = async <TRequest, TResponse>(
   path: string,
   payload: TRequest,
   useAuth = false,
 ): Promise<TResponse> => {
-  const response = await fetch(`${BASE_URL}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(useAuth ? getAuthHeaders() : {}),
+      ...(useAuth ? getBearerAuthHeaders() : {}),
     },
     body: JSON.stringify(payload),
   });
 
-  return parseResponse<TResponse>(response);
+  return parseApiResponse<TResponse>(response);
 };
 
 // --- API 함수들 ---
 
-// 회원가입 요청
-export const signup = async (signUpData: SignUpRequest) => {
+// 회원가입 요청 (nonce 발급) → 서명 후 login(/auth/signin/verify) 호출
+export const signup = async (signUpData: SignUpRequest): Promise<SignUpNonceResponse> => {
   const payload: SignUpRequest = {
-    ...signUpData,
+    name: signUpData.name.trim(),
+    email: signUpData.email.trim().toLowerCase(),
     walletAddress: normalizeWalletAddress(signUpData.walletAddress),
   };
-  return postWithFetch<SignUpRequest, SignUpResponse>("/auth/signup/request", payload);
+  return postWithFetch<SignUpRequest, SignUpNonceResponse>("/auth/signup/request", payload);
 };
 
 // 이메일 인증 코드 발송
@@ -173,12 +147,12 @@ export const login = async (
 };
 
 export const refreshAccessToken = async (): Promise<RefreshResponse> => {
-  const response = await fetch(`${BASE_URL}/auth/refresh`, {
+  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
     method: "GET",
     headers: {
-      ...getAuthHeaders(),
+      ...getBearerAuthHeaders(),
     },
   });
 
-  return parseResponse<RefreshResponse>(response);
+  return parseApiResponse<RefreshResponse>(response);
 };

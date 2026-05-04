@@ -1,19 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import LoginConfirmStep from "./LoginConfirmStep";
-import LoginLanding from "./LoginLanding";
 import LoginWalletStep from "./LoginWalletStep";
 import { useWalletLogin } from "../../features/auth/login/useWalletLogin";
 
 const Login = () => {
+  const navigate = useNavigate();
   const w = useWalletLogin();
-
-  if (w.step === "landing") {
-    return (
-      <LoginLanding
-        onSignIn={() => w.setStep("wallet")}
-        onCreateAccount={() => w.navigate("/auth/signup")}
-      />
-    );
-  }
 
   if (w.step === "confirm") {
     return (
@@ -32,7 +24,7 @@ const Login = () => {
       onWalletChange={w.handleWalletChange}
       onMetaMask={w.connectMetaMask}
       onSubmit={w.goToConfirm}
-      onBack={() => w.setStep("landing")}
+      onBack={() => navigate("/")}
       onSignUp={() => w.navigate("/auth/signup")}
       isPending={w.isPending}
     />

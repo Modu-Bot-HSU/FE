@@ -1,10 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import {
+  buildPersonalSignPayload,
+  extractAccessToken,
+  login,
   normalizeWalletAddress,
   sendEmailVerificationCode,
   signup,
+  type LoginResponse,
   type SignUpRequest,
-  type SignUpResponse,
   verifyEmailCode,
 } from "../../../apis/auth/auth";
 import { getErrorMessage } from "./signUpHelpers";
@@ -43,22 +46,39 @@ export const useSignUpMutations = (s: Setters) => {
     },
   });
 
-  const signupMutation = useMutation<SignUpResponse, unknown, SignUpRequest>({
-    mutationFn: (data: SignUpRequest) => signup(data),
+  const signupMutation = useMutation<LoginResponse, unknown, SignUpRequest>({
+    mutationFn: async (data: SignUpRequest) => {
+      if (!window.ethereum) throw new Error("메타마스크 설치가 필요합니다.");
+      const walletRaw = data.walletAddress.trim();
+      const emailNorm = data.email.trim().toLowerCase();
+      const { nonce } = await signup({
+        name: data.name.trim(),
+        email: emailNorm,
+        walletAddress: walletRaw,
+      });
+      const message = buildPersonalSignPayload(nonce);
+      const signature = (await window.ethereum.request({
+        method: "personal_sign",
+        params: [message, walletRaw],
+      })) as string;
+      return login({
+        walletAddress: normalizeWalletAddress(walletRaw),
+        signature,
+      });
+    },
     onSuccess: (data, variables) => {
-      localStorage.removeItem("accessToken");
+      const token = extractAccessToken(data);
+      if (token) localStorage.setItem("accessToken", token);
       s.setIsSignUpCompleted(true);
       s.setSignupWalletAddress(normalizeWalletAddress(variables.walletAddress));
       s.setSuccessProfile({
-        email: variables.email,
+        email: variables.email.trim().toLowerCase(),
         wallet: normalizeWalletAddress(variables.walletAddress),
       });
       alert("회원가입이 완료되었습니다.");
-      console.log("회원가입 응답:", data);
     },
     onError: (error: unknown) => {
       alert(`회원가입 실패: ${getErrorMessage(error)}`);
-      console.log("에러 상세", error);
     },
   });
 
