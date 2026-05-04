@@ -1,6 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getNftGoods, type NftGoodsItem } from "../../apis/blockchain/blockchain";
+import {
+  getHsBalance,
+  getNftGoods,
+  purchaseNft,
+  type NftGoodsItem,
+} from "../../apis/blockchain/blockchain";
+import CampusMapBottomSheet from "./components/CampusMapBottomSheet";
+import MapMarker from "./components/MapMarker";
 
 type MarkerConfig = {
   index: number;
@@ -21,26 +28,81 @@ export default function NftMapPage() {
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [balance, setBalance] = useState("0");
+  const [symbol, setSymbol] = useState("HS");
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [purchaseMessage, setPurchaseMessage] = useState<string | null>(null);
 
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
-  useEffect(() => {
-    getNftGoods(accessToken)
-      .then(setGoods)
-      .catch(() => setGoods([]))
-      .finally(() => setLoading(false));
+  const fetchMapData = useCallback(async () => {
+    setLoading(true);
+
+    const [goodsResult, balanceResult] = await Promise.allSettled([
+      getNftGoods(accessToken),
+      getHsBalance(accessToken),
+    ]);
+
+    if (goodsResult.status === "fulfilled") {
+      setGoods(goodsResult.value);
+    } else {
+      setGoods([]);
+    }
+
+    if (balanceResult.status === "fulfilled") {
+      setBalance(balanceResult.value.balance);
+      setSymbol(balanceResult.value.symbol);
+    }
+
+    setLoading(false);
   }, [accessToken]);
+
+  useEffect(() => {
+    fetchMapData();
+  }, [fetchMapData]);
 
   const getItem = (index: number) => goods.find((g) => g.index === index);
 
   const handleMarkerClick = (index: number) => {
     setSelectedIndex(index);
+    setPurchaseMessage(null);
   };
 
-  const selectedItem = selectedIndex !== null ? getItem(selectedIndex) : null;
+  const selectedItem = selectedIndex !== null ? getItem(selectedIndex) ?? null : null;
+
+  const balanceText = useMemo(
+    () => `Balance ${balance} ${symbol}`,
+    [balance, symbol],
+  );
+
+  const closeBottomSheet = () => {
+    setSelectedIndex(null);
+    setPurchaseMessage(null);
+  };
+
+  const handlePurchase = async () => {
+    if (!selectedItem) return;
+
+    setIsPurchasing(true);
+    setPurchaseMessage(null);
+
+    try {
+      await purchaseNft({ index: selectedItem.index }, accessToken);
+      setPurchaseMessage("구매 요청이 완료되었습니다.");
+      await fetchMapData();
+    } catch (error) {
+      if (error instanceof Error && error.message) {
+        setPurchaseMessage(error.message);
+      } else {
+        setPurchaseMessage("구매에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      }
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
 
   return (
-    <div className="relative h-full overflow-hidden bg-[#95b75f]">
+    <div className="relative h-full overflow-hidden bg-[#95b75f]" onClick={closeBottomSheet}>
       {/* 임시 목맵 배경 (실제 3D 이미지 전달 시 이 레이어를 이미지로 교체) */}
       <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_30%_20%,#a6ca67_0%,#8eae52_45%,#7da348_100%)]" />
       <div className="absolute -bottom-6 -left-8 h-40 w-64 rotate-3 rounded-[32px] bg-[#7c9f45]/70" />
@@ -52,7 +114,10 @@ export default function NftMapPage() {
       {/* 상단 액션 */}
       <div className="absolute left-4 right-4 top-3 z-20 flex items-start justify-between">
         <button
-          onClick={() => navigate("/campus/collection")}
+          onClick={(event) => {
+            event.stopPropagation();
+            navigate("/campus/collection");
+          }}
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 shadow"
           aria-label="컬렉션 열기"
         >
@@ -61,6 +126,15 @@ export default function NftMapPage() {
           <span className="absolute mt-6 block h-0.5 w-4 bg-slate-700" />
         </button>
 
+        <button
+          onClick={(event) => {
+            event.stopPropagation();
+            navigate("/campus/collection");
+          }}
+          className="rounded-full bg-black/35 px-3 py-1.5 text-xs font-medium text-white backdrop-blur"
+        >
+          Collection
+        </button>
       </div>
 
       {/* 건물 마커 */}
@@ -70,28 +144,26 @@ export default function NftMapPage() {
         const isSelected = selectedIndex === marker.index;
 
         return (
-          <button
+          <MapMarker
             key={marker.index}
+            label={label}
+            x={marker.x}
+            y={marker.y}
+            isSold={item?.isSold ?? false}
+            isSelected={isSelected}
             onClick={() => handleMarkerClick(marker.index)}
-            onDoubleClick={() => navigate(`/campus/${marker.index}`)}
-            className={`absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border px-3 py-1 text-sm shadow transition ${
-              isSelected
-                ? "border-slate-900 bg-slate-900 text-white"
-                : "border-slate-200 bg-white/95 text-slate-800"
-            }`}
-            style={{ left: marker.x, top: marker.y }}
-          >
-            <span className="inline-flex items-center gap-1.5">
-              {label}
-              {item?.isSold && (
-                <span className="h-2 w-2 rounded-full bg-orange-500" />
-              )}
-            </span>
-          </button>
+          />
         );
       })}
 
-      
+      <CampusMapBottomSheet
+        item={selectedItem}
+        balanceText={balanceText}
+        onPurchase={handlePurchase}
+        onClose={closeBottomSheet}
+        isPurchasing={isPurchasing}
+        purchaseMessage={purchaseMessage}
+      />
     </div>
   );
 }
