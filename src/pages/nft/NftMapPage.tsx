@@ -7,17 +7,7 @@ import {
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
 import CampusMapBottomSheet from "./components/CampusMapBottomSheet";
-import MapMarker from "./components/MapMarker";
-
-// 아이템 순서(0-based)에 대응하는 마커 위치. 아이템이 늘어나면 위치를 추가하세요.
-const MARKER_POSITIONS: { x: string; y: string }[] = [
-  { x: "77%", y: "16%" },
-  { x: "70%", y: "54%" },
-  { x: "24%", y: "88%" },
-  { x: "30%", y: "44%" },
-  { x: "50%", y: "30%" },
-  { x: "55%", y: "70%" },
-];
+import CampusScene from "./components/CampusScene";
 
 export default function NftMapPage() {
   const navigate = useNavigate();
@@ -99,13 +89,13 @@ export default function NftMapPage() {
 
   return (
     <div className="relative h-full overflow-hidden bg-[#95b75f]" onClick={closeBottomSheet}>
-      {/* 임시 목맵 배경 (실제 3D 이미지 전달 시 이 레이어를 이미지로 교체) */}
-      <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_30%_20%,#a6ca67_0%,#8eae52_45%,#7da348_100%)]" />
-      <div className="absolute -bottom-6 -left-8 h-40 w-64 rotate-3 rounded-[32px] bg-[#7c9f45]/70" />
-      <div className="absolute top-[24%] left-[8%] h-28 w-56 -rotate-6 rounded-[24px] bg-[#caa78a]/80 shadow-[0_16px_28px_rgba(0,0,0,0.18)]" />
-      <div className="absolute top-[37%] right-[7%] h-44 w-52 rotate-6 rounded-[26px] bg-[#d6b89c]/80 shadow-[0_20px_36px_rgba(0,0,0,0.2)]" />
-      <div className="absolute bottom-[20%] left-[6%] h-24 w-72 -rotate-2 rounded-[18px] bg-[#d9d2c9]/85 shadow-[0_14px_24px_rgba(0,0,0,0.16)]" />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(to_top,#868177_0%,transparent_100%)]" />
+      <CampusScene
+        goods={goods}
+        selectedIndex={selectedIndex}
+        onSelect={handleMarkerClick}
+        loading={loading}
+      />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-[linear-gradient(to_top,rgba(68,84,41,0.5)_0%,rgba(68,84,41,0.16)_36%,transparent_100%)]" />
 
       {/* 상단 액션 */}
       <div className="absolute left-4 right-4 top-3 z-20 flex items-start justify-between">
@@ -123,36 +113,6 @@ export default function NftMapPage() {
         </button>
 
       </div>
-
-      {/* 건물 마커 - API goods 기반 동적 렌더링 */}
-      {loading
-        ? MARKER_POSITIONS.slice(0, 4).map((pos, i) => (
-            <MapMarker
-              key={`skeleton-${i}`}
-              label="..."
-              x={pos.x}
-              y={pos.y}
-              isSold={false}
-              isSelected={false}
-              onClick={() => {}}
-            />
-          ))
-        : goods.map((item, i) => {
-            const pos = MARKER_POSITIONS[i] ?? { x: `${20 + i * 15}%`, y: `${20 + i * 15}%` };
-            const isSelected = selectedIndex === item.index;
-
-            return (
-              <MapMarker
-                key={item.index}
-                label={item.name}
-                x={pos.x}
-                y={pos.y}
-                isSold={item.isSold}
-                isSelected={isSelected}
-                onClick={() => handleMarkerClick(item.index)}
-              />
-            );
-          })}
 
       <CampusMapBottomSheet
         item={selectedItem}
