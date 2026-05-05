@@ -1,34 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import HomeMain from "./HomeMain";
 import HomeSplash from "./HomeSplash";
-import HomeWelcome from "./HomeWelcome";
-
-const WELCOME_SEEN_KEY = "homeWelcomeSeen";
 
 function hasAccessToken() {
   return typeof localStorage !== "undefined" && !!localStorage.getItem("accessToken");
 }
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const loggedIn = hasAccessToken();
 
-  const [phase, setPhase] = useState<"splash" | "welcome">(() =>
-    typeof sessionStorage !== "undefined" && sessionStorage.getItem(WELCOME_SEEN_KEY) === "1"
-      ? "welcome"
-      : "splash",
-  );
-
   useEffect(() => {
-    if (loggedIn) return;
-    if (phase !== "splash") return;
+    if (loggedIn) return undefined;
     const id = window.setTimeout(() => {
-      sessionStorage.setItem(WELCOME_SEEN_KEY, "1");
-      setPhase("welcome");
-    }, 2200);
+      navigate("/auth/login");
+    }, 1000);
     return () => window.clearTimeout(id);
-  }, [phase, loggedIn]);
+  }, [loggedIn, navigate]);
 
   if (loggedIn) return <HomeMain />;
-  if (phase === "splash") return <HomeSplash />;
-  return <HomeWelcome />;
+  return <HomeSplash />;
 }
