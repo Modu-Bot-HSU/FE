@@ -1,10 +1,12 @@
-import SignUpEmailVerificationSection from "./SignUpEmailVerificationSection";
-import SignUpRegisterSection from "./SignUpRegisterSection";
-import { useSignUp } from "./useSignUp";
-import AuthPageLayout from "../../components/common/AuthPageLayout";
+import { useState } from "react";
+import AuthScreenLayout from "../../components/auth/AuthScreenLayout";
+import { useSignUp } from "../../features/auth/signup/useSignUp";
+import SignUpStepUniversity from "./SignUpStepUniversity";
+import SignUpStepOtp from "./SignUpStepOtp";
+import SignUpStepWallet from "./SignUpStepWallet";
+import SignUpSuccess from "./SignUpSuccess";
 
 const SignUp = () => {
-  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const s = useSignUp();
 
@@ -13,11 +15,25 @@ const SignUp = () => {
   }
 
   return (
-    <AuthPageLayout title="회원가입">
+    <AuthScreenLayout>
+      {step === 1 ? (
+        <SignUpStepUniversity
+          email={s.email}
+          name={s.name}
+          onEmailChange={s.onEmailChange}
+          onNameChange={s.setName}
+          onSendCode={async () => {
+            await s.handleSendVerificationCode();
+            setStep(2);
+          }}
+          sendPending={s.sendCodeMutation.isPending}
+          onBack={() => setStep(1)}
+        />
+      ) : null}
 
       {step === 2 ? (
         <SignUpStepOtp
-          email={s.email}
+          email={s.email.trim()}
           code={s.code}
           onCodeChange={s.setCode}
           countdownLabel={s.countdownLabel}
@@ -28,31 +44,28 @@ const SignUp = () => {
             await s.handleSendVerificationCode();
           }}
           onVerify={async () => {
-            try {
-              const ok = await s.handleVerifyCode();
-              if (ok) setStep(3);
-            } catch {
-              /* mutation onError shows alert */
-            }
+            await s.handleVerifyCode();
+            setStep(3);
           }}
           onBack={() => setStep(1)}
         />
       ) : null}
 
-      <SignUpEmailVerificationSection
-        verificationEmail={s.verificationEmail}
-        onVerificationEmailChange={s.onVerificationEmailChange}
-        code={s.code}
-        onCodeChange={s.setCode}
-        onSendCode={s.handleSendVerificationCode}
-        onVerifyCode={s.handleVerifyCode}
-        sendPending={s.sendCodeMutation.isPending}
-        verifyPending={s.verifyCodeMutation.isPending}
-        isEmailVerified={s.isEmailVerified}
-        remainingSeconds={s.remainingSeconds}
-        countdownLabel={s.countdownLabel}
-      />
-    </AuthPageLayout>
+      {step === 3 ? (
+        <SignUpStepWallet
+          email={s.email.trim()}
+          walletAddress={s.walletAddress}
+          onWalletChange={(e) => s.setWalletAddress(e.target.value)}
+          onMetaMask={s.connectMetaMaskToForm}
+          onSubmit={async () => {
+            await s.handleComplete();
+            setStep(4);
+          }}
+          onBack={() => setStep(2)}
+          isPending={s.isPending}
+        />
+      ) : null}
+    </AuthScreenLayout>
   );
 };
 
