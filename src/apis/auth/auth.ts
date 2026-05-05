@@ -79,6 +79,37 @@ export const extractAccessToken = (
   return typeof token === "string" && token.length > 0 ? token : null;
 };
 
+export const extractRefreshToken = (
+  response: LoginResponse | RefreshResponse | SignUpResponse,
+): string | null => {
+  const payload = response as Record<string, unknown>;
+  const token = payload.refreshToken ?? payload.refresh ?? payload.refreshJwt;
+  return typeof token === "string" && token.length > 0 ? token : null;
+};
+
+export const saveAuthTokens = (
+  response: LoginResponse | RefreshResponse | SignUpResponse,
+) => {
+  if (typeof localStorage === "undefined") return;
+
+  const accessToken = extractAccessToken(response);
+  const refreshToken = extractRefreshToken(response);
+
+  if (accessToken) {
+    localStorage.setItem("accessToken", accessToken);
+  }
+
+  if (refreshToken) {
+    localStorage.setItem("refreshToken", refreshToken);
+  }
+};
+
+export const clearAuthTokens = () => {
+  if (typeof localStorage === "undefined") return;
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+};
+
 const postWithFetch = async <TRequest, TResponse>(
   path: string,
   payload: TRequest,

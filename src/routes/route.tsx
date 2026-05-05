@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createHashRouter } from "react-router-dom";
 import About from "../pages/About.tsx";
 import Home from "../pages/home/homePage.tsx";
 import NotFound from "../pages/NotFound.tsx";
@@ -9,7 +9,7 @@ import NftMapPage from "../pages/nft/NftMapPage.tsx";
 import NftDetailPage from "../pages/nft/NftDetailPage.tsx";
 import NftCollectionPage from "../pages/nft/NftCollectionPage.tsx";
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: "/",
     element: <RootLayout />,
