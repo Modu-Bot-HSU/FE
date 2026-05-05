@@ -1,4 +1,5 @@
 import CustomInput from "../../components/common/Input";
+import FormActionButton from "../../components/common/FormActionButton";
 
 type Props = {
   email: string;
@@ -46,18 +47,9 @@ const SignUpRegisterSection = ({
       onChange={(e) => onNameChange(e.target.value)}
     />
 
-    <button
-      type="button"
-      onClick={onSubmit}
-      disabled={isPending || isSignUpCompleted}
-      className={`w-full max-w-[320px] py-3 rounded-lg text-white font-bold transition-all ${
-        isPending || isSignUpCompleted
-          ? "bg-gray-400 cursor-not-allowed"
-          : "bg-blue-500 hover:bg-blue-600 active:scale-95"
-      }`}
-    >
+    <FormActionButton onClick={onSubmit} disabled={isPending || isSignUpCompleted} tone="blue">
       {isSignUpCompleted ? "회원가입 완료" : isPending ? "처리 중..." : "회원가입"}
-    </button>
+    </FormActionButton>
   </>
 );
 

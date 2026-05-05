@@ -1,13 +1,13 @@
 import SignUpEmailVerificationSection from "./SignUpEmailVerificationSection";
 import SignUpRegisterSection from "./SignUpRegisterSection";
 import { useSignUp } from "./useSignUp";
+import AuthPageLayout from "../../components/common/AuthPageLayout";
 
 const SignUp = () => {
   const s = useSignUp();
 
   return (
-    <div className="flex flex-col gap-4 items-center justify-center min-h-screen p-4">
-      <div className="text-xl font-bold text-gray-500 mb-2">회원가입</div>
+    <AuthPageLayout title="회원가입">
 
       <SignUpRegisterSection
         email={s.email}
@@ -34,7 +34,7 @@ const SignUp = () => {
         remainingSeconds={s.remainingSeconds}
         countdownLabel={s.countdownLabel}
       />
-    </div>
+    </AuthPageLayout>
   );
 };
 

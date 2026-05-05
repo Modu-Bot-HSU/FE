@@ -6,8 +6,8 @@ import {
   purchaseNft,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
-import CampusMapBottomSheet from "./components/CampusMapBottomSheet";
-import CampusScene from "./components/CampusScene";
+import CampusMapBottomSheet from "../../components/nft/CampusMapBottomSheet";
+import CampusScene from "../../components/nft/CampusScene";
 
 export default function NftMapPage() {
   const navigate = useNavigate();
@@ -66,7 +66,8 @@ export default function NftMapPage() {
     setPurchaseMessage(null);
   };
 
-  const selectedItem = selectedIndex !== null ? getItem(selectedIndex) ?? null : null;
+  const selectedItem =
+    selectedIndex !== null ? (getItem(selectedIndex) ?? null) : null;
 
   useEffect(() => {
     console.log("[NftMapPage] selectedItem changed", selectedItem);
@@ -128,7 +129,6 @@ export default function NftMapPage() {
           <span className="absolute mt-3 block h-0.5 w-4 bg-slate-700" />
           <span className="absolute mt-6 block h-0.5 w-4 bg-slate-700" />
         </button>
-
       </div>
 
       <CampusMapBottomSheet
