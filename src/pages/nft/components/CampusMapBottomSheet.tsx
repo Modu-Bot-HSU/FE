@@ -23,6 +23,8 @@ export default function CampusMapBottomSheet({
   isPurchasing,
   purchaseMessage,
 }: CampusMapBottomSheetProps) {
+  console.log("[CampusMapBottomSheet] render", { item });
+
   if (!item) return null;
 
   const isSold = item.isSold;
@@ -30,7 +32,7 @@ export default function CampusMapBottomSheet({
   const txHash = isSold ? item.txHash : null;
 
   return (
-    <div className="absolute inset-x-0 bottom-0 z-30" onClick={(event) => event.stopPropagation()}>
+    <div className="absolute inset-x-0 bottom-0 z-[80]" onClick={(event) => event.stopPropagation()}>
       <div className="mx-auto mb-2 w-fit rounded-full bg-white/95 px-4 py-1 text-sm text-slate-700 shadow">
         {balanceText}
       </div>

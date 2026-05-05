@@ -47,14 +47,30 @@ export default function NftMapPage() {
     fetchMapData();
   }, [fetchMapData]);
 
+  useEffect(() => {
+    console.log("[NftMapPage] goods loaded", goods);
+  }, [goods]);
+
+  useEffect(() => {
+    console.log("[NftMapPage] selectedIndex changed", selectedIndex);
+  }, [selectedIndex]);
+
   const getItem = (index: number) => goods.find((g) => g.index === index);
 
   const handleMarkerClick = (index: number) => {
+    console.log("[NftMapPage] handleMarkerClick", {
+      index,
+      item: goods.find((g) => g.index === index) ?? null,
+    });
     setSelectedIndex(index);
     setPurchaseMessage(null);
   };
 
   const selectedItem = selectedIndex !== null ? getItem(selectedIndex) ?? null : null;
+
+  useEffect(() => {
+    console.log("[NftMapPage] selectedItem changed", selectedItem);
+  }, [selectedItem]);
 
   const balanceText = useMemo(
     () => `Balance ${balance} ${symbol}`,
@@ -62,6 +78,7 @@ export default function NftMapPage() {
   );
 
   const closeBottomSheet = () => {
+    console.log("[NftMapPage] closeBottomSheet");
     setSelectedIndex(null);
     setPurchaseMessage(null);
   };
@@ -88,17 +105,17 @@ export default function NftMapPage() {
   };
 
   return (
-    <div className="relative h-full overflow-hidden bg-[#95b75f]" onClick={closeBottomSheet}>
+    <div className="relative isolate h-full overflow-hidden bg-[#95b75f]">
       <CampusScene
         goods={goods}
         selectedIndex={selectedIndex}
         onSelect={handleMarkerClick}
         loading={loading}
       />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-[linear-gradient(to_top,rgba(68,84,41,0.5)_0%,rgba(68,84,41,0.16)_36%,transparent_100%)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-44 bg-[linear-gradient(to_top,rgba(68,84,41,0.5)_0%,rgba(68,84,41,0.16)_36%,transparent_100%)]" />
 
       {/* 상단 액션 */}
-      <div className="absolute left-4 right-4 top-3 z-20 flex items-start justify-between">
+      <div className="absolute left-4 right-4 top-3 z-40 flex items-start justify-between">
         <button
           onClick={(event) => {
             event.stopPropagation();

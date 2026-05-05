@@ -103,16 +103,40 @@ function CampusModels({ goods, selectedIndex, onSelect, loading }: CampusModelsP
 
 	return (
 		<group ref={groupRef}>
-			{MODEL_PATHS.map((path, i) => (
-				<group
-					key={path}
-					ref={(node) => {
-						modelRefs.current[i] = node;
-					}}
-				>
-					<CampusModel path={path} />
-				</group>
-			))}
+			{MODEL_PATHS.map((path, i) => {
+				const item = goods[i];
+
+				return (
+					<group
+						key={path}
+						ref={(node) => {
+							modelRefs.current[i] = node;
+						}}
+						onClick={(event) => {
+							event.stopPropagation();
+							console.log("[CampusScene] building click", {
+								modelPath: path,
+								item,
+								loading,
+							});
+							if (!loading && item) {
+								onSelect(item.index);
+							}
+						}}
+						onPointerDown={(event) => {
+							event.stopPropagation();
+						}}
+						onPointerUp={(event) => {
+							event.stopPropagation();
+							if (!loading && item) {
+								onSelect(item.index);
+							}
+						}}
+					>
+						<CampusModel path={path} />
+					</group>
+				);
+			})}
 
 			{anchors.map((anchor) => {
 				const item = getItem(anchor.index);
@@ -121,15 +145,20 @@ function CampusModels({ goods, selectedIndex, onSelect, loading }: CampusModelsP
 				const isSelected = selectedIndex === item.index;
 
 				return (
-					<Html key={item.index} position={anchor.position} transform occlude="blending" distanceFactor={22}>
+					<Html key={item.index} position={anchor.position} transform occlude="blending" distanceFactor={16}>
 						<button
 							onClick={(event) => {
 								event.stopPropagation();
+								console.log("[CampusScene] label click", {
+									index: item.index,
+									name: item.name,
+									loading,
+								});
 								onSelect(item.index);
 							}}
 							onPointerDown={(event) => event.stopPropagation()}
 							disabled={loading}
-							className={`rounded-full border px-3 py-1 text-sm shadow transition whitespace-nowrap ${
+							className={`rounded-full border px-4 py-1.5 text-lg font-semibold shadow transition whitespace-nowrap ${
 								isSelected
 									? "border-slate-900 bg-slate-900 text-white"
 									: "border-slate-200 bg-white/95 text-slate-800"
@@ -157,13 +186,19 @@ function CampusSceneFallback() {
 	);
 }
 
-export default function CampusScene({ goods, selectedIndex, onSelect, loading }: CampusSceneProps) {
+export default function CampusScene({
+	goods,
+	selectedIndex,
+	onSelect,
+	loading,
+}: CampusSceneProps) {
 	return (
-		<div className="absolute inset-0">
+		<div className="absolute inset-0 z-0">
 			<Canvas
 				dpr={[1, 2]}
 				gl={{ antialias: true, alpha: true }}
 				camera={{ position: [180, 120, 180], fov: 35, near: 0.1, far: 3000 }}
+				style={{ zIndex: 0 }}
 			>
 				<color attach="background" args={["#95b75f"]} />
 				<fog attach="fog" args={["#95b75f", 220, 520]} />
