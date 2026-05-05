@@ -4,22 +4,40 @@ import { useSignUp } from "./useSignUp";
 import AuthPageLayout from "../../components/common/AuthPageLayout";
 
 const SignUp = () => {
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
   const s = useSignUp();
+
+  if (step === 4 && s.successProfile) {
+    return <SignUpSuccess profile={s.successProfile} />;
+  }
 
   return (
     <AuthPageLayout title="회원가입">
 
-      <SignUpRegisterSection
-        email={s.email}
-        onEmailChange={s.onEmailChange}
-        walletAddress={s.walletAddress}
-        onWalletChange={s.setWalletAddress}
-        name={s.name}
-        onNameChange={s.setName}
-        onSubmit={s.handleComplete}
-        isPending={s.isPending}
-        isSignUpCompleted={s.isSignUpCompleted}
-      />
+      {step === 2 ? (
+        <SignUpStepOtp
+          email={s.email}
+          code={s.code}
+          onCodeChange={s.setCode}
+          countdownLabel={s.countdownLabel}
+          remainingSeconds={s.remainingSeconds}
+          resendPending={s.sendCodeMutation.isPending}
+          verifyPending={s.verifyCodeMutation.isPending}
+          onResend={async () => {
+            await s.handleSendVerificationCode();
+          }}
+          onVerify={async () => {
+            try {
+              const ok = await s.handleVerifyCode();
+              if (ok) setStep(3);
+            } catch {
+              /* mutation onError shows alert */
+            }
+          }}
+          onBack={() => setStep(1)}
+        />
+      ) : null}
 
       <SignUpEmailVerificationSection
         verificationEmail={s.verificationEmail}
