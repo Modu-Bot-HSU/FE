@@ -1,6 +1,6 @@
 import { createHashRouter } from "react-router-dom";
 import About from "../pages/About.tsx";
-import HomePage from "../pages/home/HomePage.tsx";
+import HomePage from "../pages/home/homePage.tsx";
 import NotFound from "../pages/NotFound.tsx";
 import RootLayout from "../layouts/RootLayout.tsx";
 import SignUp from "../pages/signup/SignUp.tsx";

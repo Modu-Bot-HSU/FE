@@ -57,10 +57,13 @@ function CampusModels({
     if (!groupRef.current) return;
     if (!(camera instanceof PerspectiveCamera)) return;
 
+    let frameId: number | null = null;
     const root = groupRef.current;
     const box = new Box3().setFromObject(root);
     if (box.isEmpty()) {
-      setAnchors([]);
+      frameId = window.requestAnimationFrame(() => {
+        setAnchors([]);
+      });
       return;
     }
 
@@ -94,18 +97,24 @@ function CampusModels({
       });
     }
 
-    setAnchors(nextAnchors);
+    frameId = window.requestAnimationFrame(() => {
+      setAnchors(nextAnchors);
+    });
 
     const maxDim = Math.max(size.x, size.y, size.z);
     const fov = (camera.fov * Math.PI) / 180;
     const distance = Math.max(maxDim / (2 * Math.tan(fov / 2)), maxDim) * 1.35;
 
     camera.position.set(distance * 0.9, distance * 0.72, distance * 1.05);
-    camera.near = 0.1;
-    camera.far = distance * 10;
     camera.lookAt(0, size.y * 0.2, 0);
     camera.updateProjectionMatrix();
     invalidate();
+
+    return () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
   }, [camera, goods, invalidate]);
 
   const getItem = (index: number) => goods.find((item) => item.index === index);
