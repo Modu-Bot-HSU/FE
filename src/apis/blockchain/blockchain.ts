@@ -21,6 +21,12 @@ export interface RewardRequest {
   amount: string;
 }
 
+export interface HsBalanceResponse {
+  address: string;
+  balance: string;
+  symbol: string;
+}
+
 export type ApiObjectResponse = Record<string, unknown>;
 
 const createAuthConfig = (accessToken?: string) => {
@@ -61,6 +67,16 @@ export const rewardToken = async (
   const { data } = await axiosInstance.post<ApiObjectResponse>(
     "/blockchain/reward",
     payload,
+    createAuthConfig(accessToken),
+  );
+  return data;
+};
+
+export const getHsBalance = async (
+  accessToken?: string,
+): Promise<HsBalanceResponse> => {
+  const { data } = await axiosInstance.get<HsBalanceResponse>(
+    "/blockchain/balance",
     createAuthConfig(accessToken),
   );
   return data;

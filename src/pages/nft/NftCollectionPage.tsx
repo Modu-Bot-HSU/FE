@@ -1,27 +1,40 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getNftGoods, type NftGoodsItem } from "../../apis/blockchain/blockchain";
+import {
+  getHsBalance,
+  getNftGoods,
+  type NftGoodsItem,
+} from "../../apis/blockchain/blockchain";
 
 export default function NftCollectionPage() {
   const navigate = useNavigate();
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [balance, setBalance] = useState("0");
+  const [symbol, setSymbol] = useState("HS");
 
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
   useEffect(() => {
-    getNftGoods(accessToken)
-      .then(setGoods)
-      .catch(() => setGoods([]))
+    Promise.allSettled([getNftGoods(accessToken), getHsBalance(accessToken)])
+      .then(([goodsResult, balanceResult]) => {
+        if (goodsResult.status === "fulfilled") {
+          setGoods(goodsResult.value);
+        } else {
+          setGoods([]);
+        }
+
+        if (balanceResult.status === "fulfilled") {
+          setBalance(balanceResult.value.balance);
+          setSymbol(balanceResult.value.symbol);
+        }
+      })
       .finally(() => setLoading(false));
   }, [accessToken]);
 
   // 판매된 항목은 "소유 중"으로 표시 (실제로는 owner 필드 기준 처리)
   const owned = goods.filter((g) => g.isSold);
   const available = goods.filter((g) => !g.isSold);
-
-  // 총 토큰 (예시 - 실제 API 연동 시 교체)
-  const totalTokens = 200;
 
   return (
     <div className="flex h-full flex-col bg-white">
@@ -38,8 +51,8 @@ export default function NftCollectionPage() {
           </span>
         </div>
         <div className="rounded-xl border border-slate-200 px-4 py-2 text-center">
-          <p className="text-lg font-bold text-slate-900">{totalTokens}</p>
-          <p className="text-xs text-slate-400">tokens</p>
+          <p className="text-lg font-bold text-slate-900">{balance}</p>
+          <p className="text-xs text-slate-400">{symbol}</p>
         </div>
       </div>
 
