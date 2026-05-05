@@ -28,6 +28,7 @@ export interface SignUpNonceResponse {
 export interface SignUpResponse {
   nonce?: number | string;
   accessToken?: string;
+  refreshToken?: string;
 }
 
 export interface NonceRequest {
@@ -45,6 +46,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   accessToken?: string;
+  refreshToken?: string;
   token?: string;
   jwt?: string;
   [key: string]: unknown;
@@ -52,6 +54,7 @@ export interface LoginResponse {
 
 export interface RefreshResponse {
   accessToken?: string;
+  refreshToken?: string;
   token?: string;
   jwt?: string;
   [key: string]: unknown;
