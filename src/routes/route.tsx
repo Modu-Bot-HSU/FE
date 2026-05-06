@@ -8,6 +8,7 @@ import Login from "../pages/login/Login.tsx";
 import MapPage from "../pages/map/MapPage.tsx";
 import ShopDetailPage from "../pages/shop/ShopDetailPage.tsx";
 import ShopPage from "../pages/shop/ShopPage.tsx";
+import ProfilePage from "../pages/profile/ProfilePage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -18,6 +19,7 @@ const router = createBrowserRouter([
       { path: "about", element: <About /> },
       { path: "auth/signup", element: <SignUp /> },
       { path: "auth/login", element: <Login /> },
+      { path: "profile", element: <ProfilePage /> },
       { path: "campus", element: <MapPage /> },
       { path: "campus/collection", element: <ShopPage /> },
       { path: "campus/:index", element: <ShopDetailPage /> },

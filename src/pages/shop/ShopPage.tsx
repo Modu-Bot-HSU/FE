@@ -5,6 +5,7 @@ import {
   getNftGoods,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
+import NftBuildingCard from "../../components/shop/NftBuildingCard";
 
 export default function ShopPage() {
   const navigate = useNavigate();
@@ -70,32 +71,12 @@ export default function ShopPage() {
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   {owned.map((nft) => (
-                    <button
+                    <NftBuildingCard
                       key={nft.index}
                       onClick={() => navigate(`/campus/${nft.index}`)}
-                      className="relative rounded-xl overflow-hidden border border-slate-200 text-left"
-                    >
-                      <div className="aspect-square bg-slate-100">
-                        {nft.imageUrl && (
-                          <img
-                            src={nft.imageUrl}
-                            alt={nft.name}
-                            className="h-full w-full object-cover"
-                          />
-                        )}
-                      </div>
-                      <div className="absolute top-2 left-2">
-                        <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-white">
-                          Owned
-                        </span>
-                      </div>
-                      <div className="p-2">
-                        <p className="text-sm font-semibold text-slate-900 truncate">
-                          {nft.name}
-                        </p>
-                        <p className="text-xs text-slate-400">{nft.price} tokens</p>
-                      </div>
-                    </button>
+                      item={nft}
+                      badgeText="Owned"
+                    />
                   ))}
                 </div>
               )}
@@ -107,27 +88,11 @@ export default function ShopPage() {
               </p>
               <div className="grid grid-cols-2 gap-3">
                 {available.map((nft) => (
-                  <button
+                  <NftBuildingCard
                     key={nft.index}
                     onClick={() => navigate(`/campus/${nft.index}`)}
-                    className="rounded-xl overflow-hidden border border-slate-200 text-left"
-                  >
-                    <div className="aspect-square bg-slate-100">
-                      {nft.imageUrl && (
-                        <img
-                          src={nft.imageUrl}
-                          alt={nft.name}
-                          className="h-full w-full object-cover"
-                        />
-                      )}
-                    </div>
-                    <div className="p-2">
-                      <p className="text-sm font-semibold text-slate-900 truncate">
-                        {nft.name}
-                      </p>
-                      <p className="text-xs text-slate-500">{nft.price} tokens</p>
-                    </div>
-                  </button>
+                    item={nft}
+                  />
                 ))}
 
                 {available.length % 2 !== 0 && (

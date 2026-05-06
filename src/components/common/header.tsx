@@ -19,6 +19,14 @@ export default function header({ isLogin }: HeaderProps) {
             >
               홈
             </NavLink>
+            <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                isActive ? "text-white" : "hover:text-white"
+              }
+            >
+              프로필
+            </NavLink>
             <span>{isLogin ? "로그인됨" : "로그아웃됨"}</span>
           </div>
         </div>
