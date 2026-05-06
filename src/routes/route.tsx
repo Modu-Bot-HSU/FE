@@ -1,6 +1,6 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createHashRouter } from "react-router-dom";
 import About from "../pages/About.tsx";
-import Home from "../pages/home/homePage.tsx";
+import HomePage from "../pages/home/homePage.tsx";
 import NotFound from "../pages/NotFound.tsx";
 import RootLayout from "../layouts/RootLayout.tsx";
 import SignUp from "../pages/signup/SignUp.tsx";
@@ -10,12 +10,12 @@ import ShopDetailPage from "../pages/shop/ShopDetailPage.tsx";
 import ShopPage from "../pages/shop/ShopPage.tsx";
 import ProfilePage from "../pages/profile/ProfilePage.tsx";
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: "/",
     element: <RootLayout />,
     children: [
-      { index: true, element: <Home /> },
+      { index: true, element: <HomePage /> },
       { path: "about", element: <About /> },
       { path: "auth/signup", element: <SignUp /> },
       { path: "auth/login", element: <Login /> },

@@ -1,40 +1,71 @@
-import SignUpEmailVerificationSection from "./SignUpEmailVerificationSection";
-import SignUpRegisterSection from "./SignUpRegisterSection";
-import { useSignUp } from "./useSignUp";
+import { useState } from "react";
+import AuthScreenLayout from "../../components/auth/AuthScreenLayout";
+import { useSignUp } from "../../features/auth/signup/useSignUp";
+import SignUpStepUniversity from "./SignUpStepUniversity";
+import SignUpStepOtp from "./SignUpStepOtp";
+import SignUpStepWallet from "./SignUpStepWallet";
+import SignUpSuccess from "./SignUpSuccess";
 
 const SignUp = () => {
+  const [step, setStep] = useState(1);
   const s = useSignUp();
 
+  if (step === 4 && s.successProfile) {
+    return <SignUpSuccess profile={s.successProfile} />;
+  }
+
   return (
-    <div className="flex flex-col gap-4 items-center justify-center min-h-screen p-4">
-      <div className="text-xl font-bold text-gray-500 mb-2">회원가입</div>
+    <AuthScreenLayout>
+      {step === 1 ? (
+        <SignUpStepUniversity
+          email={s.email}
+          name={s.name}
+          onEmailChange={s.onEmailChange}
+          onNameChange={s.setName}
+          onSendCode={async () => {
+            await s.handleSendVerificationCode();
+            setStep(2);
+          }}
+          sendPending={s.sendCodeMutation.isPending}
+          onBack={() => setStep(1)}
+        />
+      ) : null}
 
-      <SignUpRegisterSection
-        email={s.email}
-        onEmailChange={s.onEmailChange}
-        walletAddress={s.walletAddress}
-        onWalletChange={s.setWalletAddress}
-        name={s.name}
-        onNameChange={s.setName}
-        onSubmit={s.handleComplete}
-        isPending={s.isPending}
-        isSignUpCompleted={s.isSignUpCompleted}
-      />
+      {step === 2 ? (
+        <SignUpStepOtp
+          email={s.email.trim()}
+          code={s.code}
+          onCodeChange={s.setCode}
+          countdownLabel={s.countdownLabel}
+          remainingSeconds={s.remainingSeconds}
+          resendPending={s.sendCodeMutation.isPending}
+          verifyPending={s.verifyCodeMutation.isPending}
+          onResend={async () => {
+            await s.handleSendVerificationCode();
+          }}
+          onVerify={async () => {
+            await s.handleVerifyCode();
+            setStep(3);
+          }}
+          onBack={() => setStep(1)}
+        />
+      ) : null}
 
-      <SignUpEmailVerificationSection
-        verificationEmail={s.verificationEmail}
-        onVerificationEmailChange={s.onVerificationEmailChange}
-        code={s.code}
-        onCodeChange={s.setCode}
-        onSendCode={s.handleSendVerificationCode}
-        onVerifyCode={s.handleVerifyCode}
-        sendPending={s.sendCodeMutation.isPending}
-        verifyPending={s.verifyCodeMutation.isPending}
-        isEmailVerified={s.isEmailVerified}
-        remainingSeconds={s.remainingSeconds}
-        countdownLabel={s.countdownLabel}
-      />
-    </div>
+      {step === 3 ? (
+        <SignUpStepWallet
+          email={s.email.trim()}
+          walletAddress={s.walletAddress}
+          onWalletChange={(e) => s.setWalletAddress(e.target.value)}
+          onMetaMask={s.connectMetaMaskToForm}
+          onSubmit={async () => {
+            await s.handleComplete();
+            setStep(4);
+          }}
+          onBack={() => setStep(2)}
+          isPending={s.isPending}
+        />
+      ) : null}
+    </AuthScreenLayout>
   );
 };
 

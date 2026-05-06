@@ -1,4 +1,5 @@
 import CustomInput from "../../components/common/Input";
+import FormActionButton from "../../components/common/FormActionButton";
 
 type Props = {
   verificationEmail: string;
@@ -40,18 +41,14 @@ const SignUpEmailVerificationSection = ({
       onChange={(e) => onVerificationEmailChange(e.target.value)}
     />
 
-    <button
-      type="button"
+    <FormActionButton
       onClick={onSendCode}
       disabled={sendPending}
-      className={`mt-3 w-full max-w-[320px] py-2 rounded-lg text-white font-bold transition-all ${
-        sendPending
-          ? "bg-gray-400 cursor-not-allowed"
-          : "bg-indigo-500 hover:bg-indigo-600 active:scale-95"
-      }`}
+      tone="indigo"
+      className="mt-3 py-2"
     >
       {sendPending ? "전송 중..." : "인증번호 전송"}
-    </button>
+    </FormActionButton>
 
     <CustomInput
       name="code"
@@ -60,22 +57,18 @@ const SignUpEmailVerificationSection = ({
       onChange={(e) => onCodeChange(e.target.value)}
       className="mt-3"
     />
-    <button
-      type="button"
+    <FormActionButton
       onClick={onVerifyCode}
       disabled={verifyPending || isEmailVerified}
-      className={`mt-3 w-full max-w-[320px] py-2 rounded-lg text-white font-bold transition-all ${
-        verifyPending || isEmailVerified
-          ? "bg-gray-400 cursor-not-allowed"
-          : "bg-green-500 hover:bg-green-600 active:scale-95"
-      }`}
+      tone="green"
+      className="mt-3 py-2"
     >
       {isEmailVerified
         ? "이메일 인증 완료"
         : verifyPending
           ? "확인 중..."
           : "인증번호 확인"}
-    </button>
+    </FormActionButton>
 
     {remainingSeconds > 0 && !isEmailVerified && (
       <p className="text-sm text-gray-500 mt-2">인증 제한 시간: {countdownLabel}</p>
