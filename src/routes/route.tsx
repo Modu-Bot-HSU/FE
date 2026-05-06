@@ -5,9 +5,9 @@ import NotFound from "../pages/NotFound.tsx";
 import RootLayout from "../layouts/RootLayout.tsx";
 import SignUp from "../pages/signup/SignUp.tsx";
 import Login from "../pages/login/Login.tsx";
-import NftMapPage from "../pages/nft/NftMapPage.tsx";
-import NftDetailPage from "../pages/nft/NftDetailPage.tsx";
-import NftCollectionPage from "../pages/nft/NftCollectionPage.tsx";
+import MapPage from "../pages/map/MapPage.tsx";
+import ShopDetailPage from "../pages/shop/ShopDetailPage.tsx";
+import ShopPage from "../pages/shop/ShopPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -18,9 +18,9 @@ const router = createBrowserRouter([
       { path: "about", element: <About /> },
       { path: "auth/signup", element: <SignUp /> },
       { path: "auth/login", element: <Login /> },
-      { path: "campus", element: <NftMapPage /> },
-      { path: "campus/collection", element: <NftCollectionPage /> },
-      { path: "campus/:index", element: <NftDetailPage /> },
+      { path: "campus", element: <MapPage /> },
+      { path: "campus/collection", element: <ShopPage /> },
+      { path: "campus/:index", element: <ShopDetailPage /> },
       { path: "*", element: <NotFound /> },
     ],
   },

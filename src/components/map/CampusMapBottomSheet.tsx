@@ -1,4 +1,4 @@
-import type { NftGoodsItem } from "../../../apis/blockchain/blockchain";
+import type { NftGoodsItem } from "../../apis/blockchain/blockchain";
 
 type CampusMapBottomSheetProps = {
   item: NftGoodsItem | null;
