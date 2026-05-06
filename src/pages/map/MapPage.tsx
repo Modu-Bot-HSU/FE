@@ -6,10 +6,10 @@ import {
   purchaseNft,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
-import CampusMapBottomSheet from "../../components/nft/CampusMapBottomSheet";
-import CampusScene from "../../components/nft/CampusScene";
+import CampusMapBottomSheet from "../../components/map/CampusMapBottomSheet.tsx";
+import CampusScene from "../../components/map/CampusScene.tsx";
 
-export default function NftMapPage() {
+export default function MapPage() {
   const navigate = useNavigate();
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);

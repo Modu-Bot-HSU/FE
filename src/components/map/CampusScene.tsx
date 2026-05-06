@@ -42,12 +42,7 @@ type CampusModelsProps = {
   loading: boolean;
 };
 
-function CampusModels({
-  goods,
-  selectedIndex,
-  onSelect,
-  loading,
-}: CampusModelsProps) {
+function CampusModels({ goods, selectedIndex, onSelect, loading }: CampusModelsProps) {
   const groupRef = useRef<Group>(null);
   const modelRefs = useRef<Array<Group | null>>([]);
   const [anchors, setAnchors] = useState<AnchorItem[]>([]);
@@ -57,13 +52,10 @@ function CampusModels({
     if (!groupRef.current) return;
     if (!(camera instanceof PerspectiveCamera)) return;
 
-    let frameId: number | null = null;
     const root = groupRef.current;
     const box = new Box3().setFromObject(root);
     if (box.isEmpty()) {
-      frameId = window.requestAnimationFrame(() => {
-        setAnchors([]);
-      });
+      setAnchors([]);
       return;
     }
 
@@ -83,11 +75,7 @@ function CampusModels({
       if (modelBox.isEmpty()) continue;
 
       const centerWorld = modelBox.getCenter(new Vector3());
-      const topWorld = new Vector3(
-        centerWorld.x,
-        modelBox.max.y,
-        centerWorld.z,
-      );
+      const topWorld = new Vector3(centerWorld.x, modelBox.max.y, centerWorld.z);
       const centerLocal = root.worldToLocal(centerWorld.clone());
       const topLocal = root.worldToLocal(topWorld.clone());
 
@@ -97,24 +85,18 @@ function CampusModels({
       });
     }
 
-    frameId = window.requestAnimationFrame(() => {
-      setAnchors(nextAnchors);
-    });
+    setAnchors(nextAnchors);
 
     const maxDim = Math.max(size.x, size.y, size.z);
     const fov = (camera.fov * Math.PI) / 180;
     const distance = Math.max(maxDim / (2 * Math.tan(fov / 2)), maxDim) * 1.35;
 
     camera.position.set(distance * 0.9, distance * 0.72, distance * 1.05);
+    camera.near = 0.1;
+    camera.far = distance * 10;
     camera.lookAt(0, size.y * 0.2, 0);
     camera.updateProjectionMatrix();
     invalidate();
-
-    return () => {
-      if (frameId !== null) {
-        window.cancelAnimationFrame(frameId);
-      }
-    };
   }, [camera, goods, invalidate]);
 
   const getItem = (index: number) => goods.find((item) => item.index === index);
@@ -163,13 +145,7 @@ function CampusModels({
         const isSelected = selectedIndex === item.index;
 
         return (
-          <Html
-            key={item.index}
-            position={anchor.position}
-            transform
-            occlude="blending"
-            distanceFactor={16}
-          >
+          <Html key={item.index} position={anchor.position} transform occlude="blending" distanceFactor={16}>
             <button
               onClick={(event) => {
                 event.stopPropagation();
@@ -190,9 +166,7 @@ function CampusModels({
             >
               <span className="inline-flex items-center gap-1.5">
                 {item.name}
-                {item.isSold && (
-                  <span className="h-2 w-2 rounded-full bg-orange-500" />
-                )}
+                {item.isSold && <span className="h-2 w-2 rounded-full bg-orange-500" />}
               </span>
             </button>
           </Html>
@@ -231,11 +205,7 @@ export default function CampusScene({
 
         <ambientLight intensity={1.7} />
         <hemisphereLight intensity={1.1} groundColor="#6f8553" />
-        <directionalLight
-          position={[180, 220, 120]}
-          intensity={2.2}
-          castShadow
-        />
+        <directionalLight position={[180, 220, 120]} intensity={2.2} castShadow />
         <directionalLight position={[-120, 80, -80]} intensity={0.85} />
 
         <Suspense fallback={<CampusSceneFallback />}>
@@ -247,12 +217,7 @@ export default function CampusScene({
           />
         </Suspense>
 
-        <OrbitControls
-          enablePan={false}
-          maxPolarAngle={Math.PI / 2.15}
-          minDistance={80}
-          maxDistance={420}
-        />
+        <OrbitControls enablePan={false} maxPolarAngle={Math.PI / 2.15} minDistance={80} maxDistance={420} />
       </Canvas>
     </div>
   );
