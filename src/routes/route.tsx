@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, createHashRouter } from "react-router-dom";
 import About from "../pages/About.tsx";
 import Home from "../pages/home/homePage.tsx";
 import NotFound from "../pages/NotFound.tsx";
@@ -11,7 +11,7 @@ import NftCollectionPage from "../pages/nft/NftCollectionPage.tsx";
 import DailyQPage from "../pages/DailyQPage.tsx";
 import ProfilePage from "../pages/ProfilePage.tsx";
 
-const router = createBrowserRouter([
+const routes = [
   {
     path: "/",
     element: <RootLayout />,
@@ -28,6 +28,8 @@ const router = createBrowserRouter([
       { path: "*", element: <NotFound /> },
     ],
   },
-]);
+];
+
+const router = import.meta.env.PROD ? createHashRouter(routes) : createBrowserRouter(routes);
 
 export default router;
