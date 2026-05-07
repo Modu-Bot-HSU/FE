@@ -1,8 +1,8 @@
 import { HOME_BG } from "../../features/home/homeConstants";
 import { useHomeChat } from "../../features/home/useHomeChat";
-import HomeChatView from "./HomeChatView";
-import HomeComposer from "./HomeComposer";
-import HomeDefaultView from "./HomeDefaultView";
+import HomeChatView from "./ChatView";
+import HomeComposer from "./Composer";
+import HomeDefaultView from "./DefaultView";
 
 export default function HomeMain() {
   const chat = useHomeChat();
