@@ -7,7 +7,7 @@ import {
 } from "../../apis/blockchain/blockchain";
 import { AxiosError } from "axios";
 
-export default function NftDetailPage() {
+export default function ShopDetailPage() {
   const { index } = useParams<{ index: string }>();
   const navigate = useNavigate();
 
@@ -77,7 +77,6 @@ export default function NftDetailPage() {
 
   return (
     <div className="flex h-full flex-col bg-white">
-      {/* 헤더 */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
         <button
           onClick={() => navigate(-1)}
@@ -89,7 +88,6 @@ export default function NftDetailPage() {
         <div className="w-12" />
       </div>
 
-      {/* 이미지 */}
       <div className="relative bg-slate-100 mx-4 mt-4 rounded-xl overflow-hidden aspect-video flex items-center justify-center">
         {item.imageUrl ? (
           <img
@@ -102,9 +100,7 @@ export default function NftDetailPage() {
         )}
       </div>
 
-      {/* 본문 */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {/* 이름 + 가격 */}
         <div className="flex items-start justify-between">
           <h1 className="text-xl font-bold text-slate-900">{item.name}</h1>
           <span className="text-xl font-bold text-slate-900">
@@ -112,10 +108,8 @@ export default function NftDetailPage() {
           </span>
         </div>
 
-        {/* 설명 */}
         <p className="text-sm text-slate-600 leading-relaxed">{item.description}</p>
 
-        {/* 태그 */}
         <div className="flex flex-wrap gap-2">
           <span className="rounded-full border border-slate-300 px-3 py-1 text-xs text-slate-600">
             Landmark
@@ -125,21 +119,18 @@ export default function NftDetailPage() {
           </span>
         </div>
 
-        {/* 소유 정보 */}
         <p className="text-sm text-slate-500">
           {item.isSold
             ? "이미 판매된 NFT입니다."
             : "12 students own this building"}
         </p>
 
-        {/* txHash */}
         {item.txHash && (
           <p className="text-xs text-slate-400 break-all">
             TX: {item.txHash}
           </p>
         )}
 
-        {/* 메시지 */}
         {message && (
           <div
             className={`rounded-lg p-3 text-sm ${
@@ -153,7 +144,6 @@ export default function NftDetailPage() {
         )}
       </div>
 
-      {/* 구매 버튼 */}
       <div className="p-4 border-t border-slate-100">
         <button
           onClick={handlePurchase}

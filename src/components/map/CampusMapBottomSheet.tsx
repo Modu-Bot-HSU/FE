@@ -1,4 +1,4 @@
-import type { NftGoodsItem } from "../../../apis/blockchain/blockchain";
+import type { NftGoodsItem } from "../../apis/blockchain/blockchain";
 
 type CampusMapBottomSheetProps = {
   item: NftGoodsItem | null;
@@ -32,7 +32,10 @@ export default function CampusMapBottomSheet({
   const txHash = isSold ? item.txHash : null;
 
   return (
-    <div className="absolute inset-x-0 bottom-0 z-[80]" onClick={(event) => event.stopPropagation()}>
+    <div
+      className="absolute inset-x-0 bottom-0 z-[80]"
+      onClick={(event) => event.stopPropagation()}
+    >
       <div className="mx-auto mb-2 w-fit rounded-full bg-white/95 px-4 py-1 text-sm text-slate-700 shadow">
         {balanceText}
       </div>
@@ -48,8 +51,12 @@ export default function CampusMapBottomSheet({
           {isSold ? "Sold" : "Available"}
         </span>
 
-        <h2 className="mt-3 text-4xl font-semibold tracking-tight text-[#10314f]">{item.name}</h2>
-        <p className="mt-3 text-sm leading-relaxed text-slate-600">{item.description}</p>
+        <h2 className="mt-3 text-4xl font-semibold tracking-tight text-[#10314f]">
+          {item.name}
+        </h2>
+        <p className="mt-3 text-sm leading-relaxed text-slate-600">
+          {item.description}
+        </p>
 
         <dl className="mt-6 space-y-2 text-sm text-slate-700">
           <div className="grid grid-cols-[110px_1fr] gap-2">
@@ -67,12 +74,16 @@ export default function CampusMapBottomSheet({
         </dl>
 
         <div className="mt-8">
-          <p className="text-5xl font-bold leading-none text-[#ff5b00]">{item.price}</p>
+          <p className="text-5xl font-bold leading-none text-[#ff5b00]">
+            {item.price}
+          </p>
           <p className="mt-1 text-3xl font-semibold text-slate-600">tokens</p>
         </div>
 
         {purchaseMessage && (
-          <p className="mt-4 rounded-lg bg-white/70 px-3 py-2 text-sm text-slate-700">{purchaseMessage}</p>
+          <p className="mt-4 rounded-lg bg-white/70 px-3 py-2 text-sm text-slate-700">
+            {purchaseMessage}
+          </p>
         )}
 
         <button
@@ -83,8 +94,8 @@ export default function CampusMapBottomSheet({
           {isSold
             ? "Sold Out"
             : isPurchasing
-            ? "Purchasing..."
-            : `Purchase · ${item.price} tokens`}
+              ? "Purchasing..."
+              : `Purchase · ${item.price} tokens`}
         </button>
 
         <button

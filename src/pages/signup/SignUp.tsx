@@ -1,14 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import AuthScreenLayout from "../../components/auth/AuthScreenLayout";
-import SignUpStepOtp from "./SignUpStepOtp";
+import { useSignUp } from "../../features/auth/signup/useSignUp";
 import SignUpStepUniversity from "./SignUpStepUniversity";
+import SignUpStepOtp from "./SignUpStepOtp";
 import SignUpStepWallet from "./SignUpStepWallet";
 import SignUpSuccess from "./SignUpSuccess";
-import { useSignUp } from "../../features/auth/signup/useSignUp";
 
 const SignUp = () => {
-  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const s = useSignUp();
 
@@ -24,22 +22,18 @@ const SignUp = () => {
           name={s.name}
           onEmailChange={s.onEmailChange}
           onNameChange={s.setName}
-          sendPending={s.sendCodeMutation.isPending}
           onSendCode={async () => {
-            try {
-              const ok = await s.handleSendVerificationCode();
-              if (ok) setStep(2);
-            } catch {
-              /* mutation onError shows alert */
-            }
+            await s.handleSendVerificationCode();
+            setStep(2);
           }}
-          onBack={() => navigate("/")}
+          sendPending={s.sendCodeMutation.isPending}
+          onBack={() => setStep(1)}
         />
       ) : null}
 
       {step === 2 ? (
         <SignUpStepOtp
-          email={s.email}
+          email={s.email.trim()}
           code={s.code}
           onCodeChange={s.setCode}
           countdownLabel={s.countdownLabel}
@@ -50,12 +44,8 @@ const SignUp = () => {
             await s.handleSendVerificationCode();
           }}
           onVerify={async () => {
-            try {
-              const ok = await s.handleVerifyCode();
-              if (ok) setStep(3);
-            } catch {
-              /* mutation onError shows alert */
-            }
+            await s.handleVerifyCode();
+            setStep(3);
           }}
           onBack={() => setStep(1)}
         />
@@ -63,34 +53,17 @@ const SignUp = () => {
 
       {step === 3 ? (
         <SignUpStepWallet
-          email={s.email}
+          email={s.email.trim()}
           walletAddress={s.walletAddress}
           onWalletChange={(e) => s.setWalletAddress(e.target.value)}
           onMetaMask={s.connectMetaMaskToForm}
-          isPending={s.isPending}
           onSubmit={async () => {
-            try {
-              const ok = await s.handleComplete();
-              if (ok) setStep(4);
-            } catch {
-              /* mutation onError shows alert */
-            }
+            await s.handleComplete();
+            setStep(4);
           }}
           onBack={() => setStep(2)}
+          isPending={s.isPending}
         />
-      ) : null}
-
-      {step === 1 ? (
-        <p className="text-center text-sm text-gray-500 mt-4">
-          Already have an account?{" "}
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            className="text-[#FF5C00] font-semibold underline"
-          >
-            Sign in
-          </button>
-        </p>
       ) : null}
     </AuthScreenLayout>
   );
