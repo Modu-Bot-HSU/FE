@@ -1,4 +1,5 @@
 import type { NftGoodsItem } from "../../apis/blockchain/blockchain";
+import BalancePill from "../common/BalancePill";
 
 type BuildingDetailModalProps = {
   item: NftGoodsItem | null;
@@ -7,6 +8,7 @@ type BuildingDetailModalProps = {
   onClose: () => void;
   isPurchasing: boolean;
   purchaseMessage: string | null;
+  closeLabel?: string;
 };
 
 const formatShort = (value: string | null | undefined, fallback = "-") => {
@@ -22,6 +24,7 @@ export default function BuildingDetailModal({
   onClose,
   isPurchasing,
   purchaseMessage,
+  closeLabel = "map",
 }: BuildingDetailModalProps) {
   if (!item) return null;
 
@@ -35,9 +38,7 @@ export default function BuildingDetailModal({
       onClick={(event) => event.stopPropagation()}
     >
       {balanceText && (
-        <div className="ml-auto mr-4 mb-2 w-fit rounded-full border border-slate-300 bg-white/95 px-4 py-1 text-sm text-slate-700 shadow">
-          {balanceText}
-        </div>
+        <BalancePill text={balanceText} className="mb-2 ml-auto mr-4" />
       )}
 
       <div className="rounded-t-3xl bg-[#ececec] p-5 shadow-[0_-8px_24px_rgba(0,0,0,0.18)]">
@@ -102,7 +103,7 @@ export default function BuildingDetailModal({
           onClick={onClose}
           className="mt-3 w-full py-2 text-lg text-slate-500"
         >
-          ← Go back to map
+          ← Go back to {closeLabel}
         </button>
       </div>
     </div>

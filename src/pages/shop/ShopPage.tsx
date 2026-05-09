@@ -5,10 +5,10 @@ import {
   purchaseNft,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
-import NftBuildingCard from "../../components/shop/NftBuildingCard";
 import BuildingDetailModal from "../../components/map/BuildingDetailModal.tsx";
 import { AxiosError } from "axios";
-import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
+import NftGridSection from "../../components/shop/NftGridSection";
+import BalancePill from "../../components/common/BalancePill";
 
 export default function ShopPage() {
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
@@ -69,9 +69,7 @@ export default function ShopPage() {
   return (
     <div className="relative flex h-full flex-col bg-white">
       <div className="flex items-start justify-end px-4 py-10">
-        <div className="w-fit rounded-full bg-white/95 px-4 py-1 border border-slate-300 text-sm text-slate-700 shadow">
-          {balanceText}
-        </div>
+        <BalancePill text={balanceText} />
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
@@ -81,46 +79,20 @@ export default function ShopPage() {
           </div>
         ) : (
           <>
-            <section>
-              <p className="text-xs font-semibold tracking-widest text-slate-400 mb-3">
-                MY BUILDINGS
-              </p>
-              {owned.length === 0 ? (
-                <p className="text-sm text-slate-400">소유한 NFT가 없습니다.</p>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {owned.map((nft) => (
-                    <NftBuildingCard
-                      key={nft.index}
-                      onClick={() => setSelectedItem(nft)}
-                      item={nft}
-                      badgeText="Owned"
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
+            <NftGridSection
+              title="MY BUILDINGS"
+              items={owned}
+              onItemClick={setSelectedItem}
+              badgeText="Owned"
+              emptyMessage="소유한 NFT가 없습니다."
+            />
 
-            <section>
-              <p className="text-xs font-semibold tracking-widest text-slate-400 mb-3">
-                AVAILABLE
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {available.map((nft) => (
-                  <NftBuildingCard
-                    key={nft.index}
-                    onClick={() => setSelectedItem(nft)}
-                    item={nft}
-                  />
-                ))}
-
-                {available.length % 2 !== 0 && (
-                  <div className="rounded-xl border border-dashed border-slate-200 flex flex-col items-center justify-center aspect-square">
-                    <p className="text-xs text-slate-300">Coming soon</p>
-                  </div>
-                )}
-              </div>
-            </section>
+            <NftGridSection
+              title="AVAILABLE"
+              items={available}
+              onItemClick={setSelectedItem}
+              showComingSoonPlaceholder
+            />
           </>
         )}
       </div>
@@ -135,6 +107,7 @@ export default function ShopPage() {
         }}
         isPurchasing={purchasing}
         purchaseMessage={message?.text ?? null}
+        closeLabel="shop"
       />
     </div>
   );
