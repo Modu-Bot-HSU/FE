@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import MobileLayout from "../components/common/MobileLayout.tsx";
 import HomeSidebar from "../components/chat/Sidebar.tsx";
-1
+
 export default function RootLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { pathname } = useLocation();
