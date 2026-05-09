@@ -8,3 +8,5 @@ export function shouldHideHeader(pathname: string) {
   return false;
 }
 
+export const SIDEBAR_BUTTON_SAFE_TOP_CLASS = "pt-24";
+

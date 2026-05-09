@@ -7,6 +7,7 @@ import {
 } from "../../apis/blockchain/blockchain";
 import NftBuildingCard from "../../components/shop/NftBuildingCard";
 import { useAuthStore } from "../../store/useAuthStore";
+import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
 
 type ProfileMockData = {
   walletType: string;
@@ -97,7 +98,7 @@ export default function ProfilePage() {
     .toUpperCase();
 
   return (
-    <div className="relative min-h-full bg-[#f3f3f3] px-4 pb-6 pt-4">
+    <div className={`relative min-h-full bg-[#f3f3f3] px-4 pb-6 ${SIDEBAR_BUTTON_SAFE_TOP_CLASS}`}>
       
       <section>
         <div className="flex items-center gap-4">

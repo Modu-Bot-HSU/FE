@@ -8,6 +8,7 @@ import {
 import NftBuildingCard from "../../components/shop/NftBuildingCard";
 import BuildingDetailModal from "../../components/map/BuildingDetailModal.tsx";
 import { AxiosError } from "axios";
+import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
 
 export default function ShopPage() {
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
