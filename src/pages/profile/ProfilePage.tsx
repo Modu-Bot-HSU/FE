@@ -5,9 +5,10 @@ import {
   getNftGoods,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
-import NftBuildingCard from "../../components/shop/NftBuildingCard";
 import { useAuthStore } from "../../store/useAuthStore";
 import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
+import NftGridSection from "../../components/shop/NftGridSection";
+import BuildingDetailModal from "../../components/map/BuildingDetailModal";
 
 type ProfileMockData = {
   walletType: string;
@@ -27,36 +28,14 @@ const profileMock: ProfileMockData = {
   },
 };
 
-const ownedNftFallback: NftGoodsItem[] = [
-  {
-    index: 101,
-    name: "Cedar Hall",
-    description: "mock building",
-    price: "20",
-    imageUrl: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?q=80&w=900&auto=format&fit=crop",
-    metadataUrl: "-",
-    isSold: true,
-    txHash: null,
-    owner: null,
-  },
-  {
-    index: 102,
-    name: "Maple Center",
-    description: "mock building",
-    price: "32",
-    imageUrl: "https://images.unsplash.com/photo-1464029902023-f42eba355bde?q=80&w=900&auto=format&fit=crop",
-    metadataUrl: "-",
-    isSold: true,
-    txHash: null,
-    owner: null,
-  },
-];
+
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const tempUser = useAuthStore((state) => state.tempUser);
   const [balance, setBalance] = useState("12");
   const [ownedNfts, setOwnedNfts] = useState<NftGoodsItem[]>([]);
+  const [selectedItem, setSelectedItem] = useState<NftGoodsItem | null>(null);
 
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
@@ -88,7 +67,7 @@ export default function ProfilePage() {
     [tempUser],
   );
 
-  const myBuildings = ownedNfts.length > 0 ? ownedNfts : ownedNftFallback;
+  const myBuildings = ownedNfts.length > 0 ? ownedNfts : [];
 
   const initials = profile.name
     .split(" ")
@@ -127,19 +106,22 @@ export default function ProfilePage() {
       <section className="mt-6 border-t border-[#dfdfdf] pt-4">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-xl font-semibold tracking-wide text-[#6f6f6f]">DAILY Q HISTORY</h2>
-          <button type="button" className="text-xl font-semibold text-[#10314f]">View History →</button>
+          {/* daily q history로 이동 */}
+          <button type="button" onClick={() => navigate("/daily-q/history")} className="text-xl font-semibold text-[#10314f]">View History →</button>
         </div>
 
-        <div className="grid grid-cols-3 rounded-xl border border-[#c9c9c9] bg-[#f4f4f4]">
-          <div className="py-3 text-center">
+        <div className="flex rounded-xl border border-[#c9c9c9] bg-[#f4f4f4]">
+          <div className="flex-1 py-3 text-center">
             <p className="text-5xl font-bold leading-none text-[#2f8b3f]">{profile.dailyQ.received}</p>
             <p className="mt-1 text-xl text-[#2f8b3f]">Received</p>
           </div>
-          <div className="border-x border-[#d5d5d5] py-3 text-center">
+          <div className="my-3 w-px bg-[#d5d5d5]" />
+          <div className="flex-1 py-3 text-center">
             <p className="text-5xl font-bold leading-none text-[#b56a00]">{profile.dailyQ.pending}</p>
             <p className="mt-1 text-xl text-[#b56a00]">Pending</p>
           </div>
-          <div className="py-3 text-center">
+          <div className="my-3 w-px bg-[#d5d5d5]" />
+          <div className="flex-1 py-3 text-center">
             <p className="text-5xl font-bold leading-none text-[#d63a2f]">{profile.dailyQ.notCredited}</p>
             <p className="mt-1 text-xl text-[#d63a2f]">Not Credited</p>
           </div>
@@ -147,18 +129,23 @@ export default function ProfilePage() {
       </section>
 
       <section className="mt-6 border-t border-[#dfdfdf] pt-4">
-        <h2 className="mb-3 text-xl font-semibold tracking-wide text-[#6f6f6f]">MY BUILDINGS</h2>
-        <div className="grid grid-cols-2 gap-2">
-          {myBuildings.map((item) => (
-            <NftBuildingCard
-              key={item.index}
-              item={item}
-              badgeText="Owned"
-              onClick={() => navigate(`/campus/${item.index}`)}
-            />
-          ))}
-        </div>
+        <NftGridSection
+          title="MY BUILDINGS"
+          items={myBuildings.filter((g) => g.isSold)}
+          onItemClick={setSelectedItem}
+          badgeText="Owned"
+          emptyMessage="소유한 건물이 없습니다."
+        />
       </section>
+
+      <BuildingDetailModal
+        item={selectedItem}
+        onPurchase={() => {}}
+        onClose={() => setSelectedItem(null)}
+        isPurchasing={false}
+        purchaseMessage={null}
+        closeLabel="profile"
+      />
 
       <section className="mt-6 border-t border-[#dfdfdf] pt-4">
         <h2 className="mb-3 text-xl font-semibold tracking-wide text-[#6f6f6f]">ACCOUNT</h2>
