@@ -54,7 +54,6 @@ const ownedNftFallback: NftGoodsItem[] = [
 export default function ProfilePage() {
   const navigate = useNavigate();
   const tempUser = useAuthStore((state) => state.tempUser);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [balance, setBalance] = useState("12");
   const [ownedNfts, setOwnedNfts] = useState<NftGoodsItem[]>([]);
 
@@ -99,33 +98,7 @@ export default function ProfilePage() {
 
   return (
     <div className="relative min-h-full bg-[#f3f3f3] px-4 pb-6 pt-4">
-      <button
-        type="button"
-        onClick={() => setIsPanelOpen(true)}
-        className="mb-7 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-[#e6ebef] text-[#10314f]"
-        aria-label="메뉴 열기"
-      >
-        <span className="relative block h-0.5 w-4 bg-current after:absolute after:left-0 after:top-[-6px] after:block after:h-0.5 after:w-4 after:bg-current before:absolute before:left-0 before:top-[6px] before:block before:h-0.5 before:w-4 before:bg-current" />
-      </button>
-
-      {isPanelOpen && (
-        <>
-          <div className="fixed inset-0 z-[60] bg-black/30" onClick={() => setIsPanelOpen(false)} />
-          <aside className="fixed left-0 top-0 z-[70] h-full w-[260px] bg-white p-5 shadow-xl">
-            <div className="mb-6 flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Navigation</p>
-              <button type="button" onClick={() => setIsPanelOpen(false)} className="text-slate-400">✕</button>
-            </div>
-            <div className="space-y-2 text-sm">
-              <button type="button" onClick={() => navigate("/")} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100">홈</button>
-              <button type="button" onClick={() => navigate("/campus")} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100">캠퍼스 맵</button>
-              <button type="button" onClick={() => navigate("/campus/collection")} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100">컬렉션</button>
-              <button type="button" onClick={() => navigate("/profile")} className="block w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-white">프로필</button>
-            </div>
-          </aside>
-        </>
-      )}
-
+      
       <section>
         <div className="flex items-center gap-4">
           <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[#bdbdbd] bg-[#dedede] text-4xl font-bold text-[#9d9d9d]">

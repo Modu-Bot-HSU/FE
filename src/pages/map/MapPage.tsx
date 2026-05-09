@@ -6,7 +6,7 @@ import {
   purchaseNft,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
-import CampusMapBottomSheet from "../../components/map/CampusMapBottomSheet.tsx";
+import BuildingDetailModal from "../../components/map/BuildingDetailModal.tsx";
 import CampusScene from "../../components/map/CampusScene.tsx";
 
 export default function MapPage() {
@@ -15,7 +15,6 @@ export default function MapPage() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState("0");
-  const [symbol, setSymbol] = useState("HS");
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [purchaseMessage, setPurchaseMessage] = useState<string | null>(null);
 
@@ -37,7 +36,6 @@ export default function MapPage() {
 
     if (balanceResult.status === "fulfilled") {
       setBalance(balanceResult.value.balance);
-      setSymbol(balanceResult.value.symbol);
     }
 
     setLoading(false);
@@ -73,10 +71,7 @@ export default function MapPage() {
     console.log("[NftMapPage] selectedItem changed", selectedItem);
   }, [selectedItem]);
 
-  const balanceText = useMemo(
-    () => `Balance ${balance} ${symbol}`,
-    [balance, symbol],
-  );
+  const balanceText = useMemo(() => `Balance ${balance} tokens`, [balance]);
 
   const closeBottomSheet = () => {
     console.log("[NftMapPage] closeBottomSheet");
@@ -115,23 +110,7 @@ export default function MapPage() {
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-44 bg-[linear-gradient(to_top,rgba(68,84,41,0.5)_0%,rgba(68,84,41,0.16)_36%,transparent_100%)]" />
 
-      {/* 상단 액션 */}
-      <div className="absolute left-4 right-4 top-3 z-40 flex items-start justify-between">
-        <button
-          onClick={(event) => {
-            event.stopPropagation();
-            navigate("/campus/collection");
-          }}
-          className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 shadow"
-          aria-label="컬렉션 열기"
-        >
-          <span className="block h-0.5 w-4 bg-slate-700" />
-          <span className="absolute mt-3 block h-0.5 w-4 bg-slate-700" />
-          <span className="absolute mt-6 block h-0.5 w-4 bg-slate-700" />
-        </button>
-      </div>
-
-      <CampusMapBottomSheet
+      <BuildingDetailModal
         item={selectedItem}
         balanceText={balanceText}
         onPurchase={handlePurchase}

@@ -1,22 +1,25 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   getHsBalance,
   getNftGoods,
+  purchaseNft,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
 import NftBuildingCard from "../../components/shop/NftBuildingCard";
+import BuildingDetailModal from "../../components/map/BuildingDetailModal.tsx";
+import { AxiosError } from "axios";
 
 export default function ShopPage() {
-  const navigate = useNavigate();
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState("0");
-  const [symbol, setSymbol] = useState("HS");
+  const [selectedItem, setSelectedItem] = useState<NftGoodsItem | null>(null);
+  const [purchasing, setPurchasing] = useState(false);
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
-  useEffect(() => {
+  const fetchShopData = useCallback(() => {
     Promise.allSettled([getNftGoods(accessToken), getHsBalance(accessToken)])
       .then(([goodsResult, balanceResult]) => {
         if (goodsResult.status === "fulfilled") {
@@ -27,31 +30,46 @@ export default function ShopPage() {
 
         if (balanceResult.status === "fulfilled") {
           setBalance(balanceResult.value.balance);
-          setSymbol(balanceResult.value.symbol);
         }
       })
       .finally(() => setLoading(false));
   }, [accessToken]);
 
+  useEffect(() => {
+    fetchShopData();
+  }, [fetchShopData]);
+
+  const balanceText = useMemo(() => `Balance ${balance} tokens`, [balance]);
+
   const owned = goods.filter((g) => g.isSold);
   const available = goods.filter((g) => !g.isSold);
 
+  const handlePurchase = async () => {
+    if (!selectedItem) return;
+
+    setPurchasing(true);
+    setMessage(null);
+
+    try {
+      await purchaseNft({ index: selectedItem.index }, accessToken);
+      setMessage({ ok: true, text: "구매 요청이 완료되었습니다." });
+      await fetchShopData();
+    } catch (err) {
+      const msg =
+        err instanceof AxiosError
+          ? (err.response?.data as { message?: string })?.message ?? err.message
+          : "구매 중 오류가 발생했습니다.";
+      setMessage({ ok: false, text: msg });
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
   return (
-    <div className="flex h-full flex-col bg-white">
-      <div className="flex items-start justify-between px-4 py-3 border-b border-slate-100">
-        <div className="flex items-center gap-2">
-          <button className="flex flex-col gap-1 p-1" onClick={() => navigate("/campus")}>
-            <span className="block h-0.5 w-5 bg-slate-700" />
-            <span className="block h-0.5 w-5 bg-slate-700" />
-            <span className="block h-0.5 w-5 bg-slate-700" />
-          </button>
-          <span className="text-lg font-bold text-slate-900 leading-tight">
-            Campus<br />Collection
-          </span>
-        </div>
-        <div className="rounded-xl border border-slate-200 px-4 py-2 text-center">
-          <p className="text-lg font-bold text-slate-900">{balance}</p>
-          <p className="text-xs text-slate-400">{symbol}</p>
+    <div className="relative flex h-full flex-col bg-white">
+      <div className="flex items-start justify-end px-4 py-10">
+        <div className="w-fit rounded-full bg-white/95 px-4 py-1 border border-slate-300 text-sm text-slate-700 shadow">
+          {balanceText}
         </div>
       </div>
 
@@ -73,7 +91,7 @@ export default function ShopPage() {
                   {owned.map((nft) => (
                     <NftBuildingCard
                       key={nft.index}
-                      onClick={() => navigate(`/campus/${nft.index}`)}
+                      onClick={() => setSelectedItem(nft)}
                       item={nft}
                       badgeText="Owned"
                     />
@@ -90,7 +108,7 @@ export default function ShopPage() {
                 {available.map((nft) => (
                   <NftBuildingCard
                     key={nft.index}
-                    onClick={() => navigate(`/campus/${nft.index}`)}
+                    onClick={() => setSelectedItem(nft)}
                     item={nft}
                   />
                 ))}
@@ -105,6 +123,18 @@ export default function ShopPage() {
           </>
         )}
       </div>
+
+      <BuildingDetailModal
+        item={selectedItem}
+        balanceText={balanceText}
+        onPurchase={handlePurchase}
+        onClose={() => {
+          setSelectedItem(null);
+          setMessage(null);
+        }}
+        isPurchasing={purchasing}
+        purchaseMessage={message?.text ?? null}
+      />
     </div>
   );
 }

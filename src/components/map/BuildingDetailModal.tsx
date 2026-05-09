@@ -1,8 +1,8 @@
 import type { NftGoodsItem } from "../../apis/blockchain/blockchain";
 
-type CampusMapBottomSheetProps = {
+type BuildingDetailModalProps = {
   item: NftGoodsItem | null;
-  balanceText: string;
+  balanceText?: string;
   onPurchase: () => void;
   onClose: () => void;
   isPurchasing: boolean;
@@ -15,16 +15,14 @@ const formatShort = (value: string | null | undefined, fallback = "-") => {
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
 };
 
-export default function CampusMapBottomSheet({
+export default function BuildingDetailModal({
   item,
   balanceText,
   onPurchase,
   onClose,
   isPurchasing,
   purchaseMessage,
-}: CampusMapBottomSheetProps) {
-  console.log("[CampusMapBottomSheet] render", { item });
-
+}: BuildingDetailModalProps) {
   if (!item) return null;
 
   const isSold = item.isSold;
@@ -36,9 +34,11 @@ export default function CampusMapBottomSheet({
       className="absolute inset-x-0 bottom-0 z-[80]"
       onClick={(event) => event.stopPropagation()}
     >
-      <div className="mx-auto mb-2 w-fit rounded-full bg-white/95 px-4 py-1 text-sm text-slate-700 shadow">
-        {balanceText}
-      </div>
+      {balanceText && (
+        <div className="ml-auto mr-4 mb-2 w-fit rounded-full border border-slate-300 bg-white/95 px-4 py-1 text-sm text-slate-700 shadow">
+          {balanceText}
+        </div>
+      )}
 
       <div className="rounded-t-3xl bg-[#ececec] p-5 shadow-[0_-8px_24px_rgba(0,0,0,0.18)]">
         <span
@@ -73,7 +73,7 @@ export default function CampusMapBottomSheet({
           </div>
         </dl>
 
-        <div className="mt-8">
+        <div className="mt-8 text-right">
           <p className="text-5xl font-bold leading-none text-[#ff5b00]">
             {item.price}
           </p>
