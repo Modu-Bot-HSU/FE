@@ -5,8 +5,10 @@ import {
   getNftGoods,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
-import NftBuildingCard from "../../components/shop/NftBuildingCard";
 import { useAuthStore } from "../../store/useAuthStore";
+import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
+import NftGridSection from "../../components/shop/NftGridSection";
+import BuildingDetailModal from "../../components/map/BuildingDetailModal";
 
 type ProfileMockData = {
   walletType: string;
@@ -26,37 +28,14 @@ const profileMock: ProfileMockData = {
   },
 };
 
-const ownedNftFallback: NftGoodsItem[] = [
-  {
-    index: 101,
-    name: "Cedar Hall",
-    description: "mock building",
-    price: "20",
-    imageUrl: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?q=80&w=900&auto=format&fit=crop",
-    metadataUrl: "-",
-    isSold: true,
-    txHash: null,
-    owner: null,
-  },
-  {
-    index: 102,
-    name: "Maple Center",
-    description: "mock building",
-    price: "32",
-    imageUrl: "https://images.unsplash.com/photo-1464029902023-f42eba355bde?q=80&w=900&auto=format&fit=crop",
-    metadataUrl: "-",
-    isSold: true,
-    txHash: null,
-    owner: null,
-  },
-];
+
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const tempUser = useAuthStore((state) => state.tempUser);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [balance, setBalance] = useState("12");
   const [ownedNfts, setOwnedNfts] = useState<NftGoodsItem[]>([]);
+  const [selectedItem, setSelectedItem] = useState<NftGoodsItem | null>(null);
 
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
@@ -88,7 +67,7 @@ export default function ProfilePage() {
     [tempUser],
   );
 
-  const myBuildings = ownedNfts.length > 0 ? ownedNfts : ownedNftFallback;
+  const myBuildings = ownedNfts.length > 0 ? ownedNfts : [];
 
   const initials = profile.name
     .split(" ")
@@ -98,34 +77,8 @@ export default function ProfilePage() {
     .toUpperCase();
 
   return (
-    <div className="relative min-h-full bg-[#f3f3f3] px-4 pb-6 pt-4">
-      <button
-        type="button"
-        onClick={() => setIsPanelOpen(true)}
-        className="mb-7 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-[#e6ebef] text-[#10314f]"
-        aria-label="메뉴 열기"
-      >
-        <span className="relative block h-0.5 w-4 bg-current after:absolute after:left-0 after:top-[-6px] after:block after:h-0.5 after:w-4 after:bg-current before:absolute before:left-0 before:top-[6px] before:block before:h-0.5 before:w-4 before:bg-current" />
-      </button>
-
-      {isPanelOpen && (
-        <>
-          <div className="fixed inset-0 z-[60] bg-black/30" onClick={() => setIsPanelOpen(false)} />
-          <aside className="fixed left-0 top-0 z-[70] h-full w-[260px] bg-white p-5 shadow-xl">
-            <div className="mb-6 flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Navigation</p>
-              <button type="button" onClick={() => setIsPanelOpen(false)} className="text-slate-400">✕</button>
-            </div>
-            <div className="space-y-2 text-sm">
-              <button type="button" onClick={() => navigate("/")} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100">홈</button>
-              <button type="button" onClick={() => navigate("/campus")} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100">캠퍼스 맵</button>
-              <button type="button" onClick={() => navigate("/campus/collection")} className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-100">컬렉션</button>
-              <button type="button" onClick={() => navigate("/profile")} className="block w-full rounded-lg bg-slate-900 px-3 py-2 text-left text-white">프로필</button>
-            </div>
-          </aside>
-        </>
-      )}
-
+    <div className={`relative min-h-full bg-[#f3f3f3] px-4 pb-6 ${SIDEBAR_BUTTON_SAFE_TOP_CLASS}`}>
+      
       <section>
         <div className="flex items-center gap-4">
           <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[#bdbdbd] bg-[#dedede] text-4xl font-bold text-[#9d9d9d]">
@@ -153,19 +106,22 @@ export default function ProfilePage() {
       <section className="mt-6 border-t border-[#dfdfdf] pt-4">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-xl font-semibold tracking-wide text-[#6f6f6f]">DAILY Q HISTORY</h2>
-          <button type="button" className="text-xl font-semibold text-[#10314f]">View History →</button>
+          {/* daily q history로 이동 */}
+          <button type="button" onClick={() => navigate("/daily-q/history")} className="text-xl font-semibold text-[#10314f]">View History →</button>
         </div>
 
-        <div className="grid grid-cols-3 rounded-xl border border-[#c9c9c9] bg-[#f4f4f4]">
-          <div className="py-3 text-center">
+        <div className="flex rounded-xl border border-[#c9c9c9] bg-[#f4f4f4]">
+          <div className="flex-1 py-3 text-center">
             <p className="text-5xl font-bold leading-none text-[#2f8b3f]">{profile.dailyQ.received}</p>
             <p className="mt-1 text-xl text-[#2f8b3f]">Received</p>
           </div>
-          <div className="border-x border-[#d5d5d5] py-3 text-center">
+          <div className="my-3 w-px bg-[#d5d5d5]" />
+          <div className="flex-1 py-3 text-center">
             <p className="text-5xl font-bold leading-none text-[#b56a00]">{profile.dailyQ.pending}</p>
             <p className="mt-1 text-xl text-[#b56a00]">Pending</p>
           </div>
-          <div className="py-3 text-center">
+          <div className="my-3 w-px bg-[#d5d5d5]" />
+          <div className="flex-1 py-3 text-center">
             <p className="text-5xl font-bold leading-none text-[#d63a2f]">{profile.dailyQ.notCredited}</p>
             <p className="mt-1 text-xl text-[#d63a2f]">Not Credited</p>
           </div>
@@ -173,18 +129,23 @@ export default function ProfilePage() {
       </section>
 
       <section className="mt-6 border-t border-[#dfdfdf] pt-4">
-        <h2 className="mb-3 text-xl font-semibold tracking-wide text-[#6f6f6f]">MY BUILDINGS</h2>
-        <div className="grid grid-cols-2 gap-2">
-          {myBuildings.map((item) => (
-            <NftBuildingCard
-              key={item.index}
-              item={item}
-              badgeText="Owned"
-              onClick={() => navigate(`/campus/${item.index}`)}
-            />
-          ))}
-        </div>
+        <NftGridSection
+          title="MY BUILDINGS"
+          items={myBuildings.filter((g) => g.isSold)}
+          onItemClick={setSelectedItem}
+          badgeText="Owned"
+          emptyMessage="소유한 건물이 없습니다."
+        />
       </section>
+
+      <BuildingDetailModal
+        item={selectedItem}
+        onPurchase={() => {}}
+        onClose={() => setSelectedItem(null)}
+        isPurchasing={false}
+        purchaseMessage={null}
+        closeLabel="profile"
+      />
 
       <section className="mt-6 border-t border-[#dfdfdf] pt-4">
         <h2 className="mb-3 text-xl font-semibold tracking-wide text-[#6f6f6f]">ACCOUNT</h2>

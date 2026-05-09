@@ -6,10 +6,9 @@ import RootLayout from "../layouts/RootLayout.tsx";
 import SignUp from "../pages/signup/SignUp.tsx";
 import Login from "../pages/login/Login.tsx";
 import NftMapPage from "../pages/map/MapPage.tsx";
-import NftDetailPage from "../pages/shop/ShopDetailPage.tsx";
 import NftCollectionPage from "../pages/shop/ShopPage.tsx";
 import DailyQPage from "../pages/DailyQPage.tsx";
-import ProfilePage from "../pages/ProfilePage.tsx";
+import ProfilePage from "../pages/profile/ProfilePage.tsx";
 import { ProtectedRoute, PublicOnlyRoute } from "./protectedRoute.tsx";
 
 const routes = [
@@ -31,7 +30,6 @@ const routes = [
           { path: "daily-q", element: <DailyQPage /> },
           { path: "campus", element: <NftMapPage /> },
           { path: "campus/collection", element: <NftCollectionPage /> },
-          { path: "campus/:index", element: <NftDetailPage /> },
           { path: "profile", element: <ProfilePage /> },
         ],
       },
