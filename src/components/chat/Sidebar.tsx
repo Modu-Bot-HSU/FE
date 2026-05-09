@@ -9,7 +9,7 @@ type Props = {
 const menuSections = [
   {
     title: "MAIN",
-    items: [{ label: "Chat", to: "/" }, { label: "Daily Q", to: "/daily-q" }],
+    items: [{ label: "Chat", to: "/chat" }, { label: "Daily Q", to: "/daily-q" }],
   },
   {
     title: "CAMPUS",

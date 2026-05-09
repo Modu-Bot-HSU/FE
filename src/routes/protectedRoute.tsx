@@ -21,7 +21,7 @@ export function ProtectedRoute() {
 
 export function PublicOnlyRoute() {
   if (hasAccessToken()) {
-    return <Navigate to={DEFAULT_AUTHENTICATED_PATH} replace />;
+    return <Navigate to="/chat" replace />;
   }
 
   return <Outlet />;

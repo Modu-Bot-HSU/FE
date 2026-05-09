@@ -9,24 +9,28 @@ import NftMapPage from "../pages/map/MapPage.tsx";
 import NftCollectionPage from "../pages/shop/ShopPage.tsx";
 import DailyQPage from "../pages/DailyQPage.tsx";
 import ProfilePage from "../pages/profile/ProfilePage.tsx";
+import Splash from "../pages/chat/Splash.tsx";
 import { ProtectedRoute, PublicOnlyRoute } from "./protectedRoute.tsx";
 
 const routes = [
   {
     path: "/",
+    element: <Splash />,
+  },
+  {
+    element: <PublicOnlyRoute />,
+    children: [
+      { path: "auth/signup", element: <SignUp /> },
+      { path: "auth/login", element: <Login /> },
+    ],
+  },
+  {
     element: <RootLayout />,
     children: [
       {
-        element: <PublicOnlyRoute />,
-        children: [
-          { path: "auth/signup", element: <SignUp /> },
-          { path: "auth/login", element: <Login /> },
-        ],
-      },
-      {
         element: <ProtectedRoute />,
         children: [
-          { index: true, element: <Home /> },
+          { path: "chat", element: <Home /> },
           { path: "daily-q", element: <DailyQPage /> },
           { path: "campus", element: <NftMapPage /> },
           { path: "campus/collection", element: <NftCollectionPage /> },
