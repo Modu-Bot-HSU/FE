@@ -10,10 +10,16 @@ const MODEL_PATHS = [
   "/models/naksan.glb",
   "/models/wuchon.glb",
   "/models/yeongu.glb",
+  "/models/sangsang.glb",
+  "/models/jinri.glb",
+  "/models/haksong.glb",
+  "/models/changui.glb",
+  "/models/mirae.glb",
+  "/models/tamgu.glb",
 ] as const;
 
 type CampusModelProps = {
-  path: (typeof MODEL_PATHS)[number];
+  path: string;
 };
 
 type CampusSceneProps = {
@@ -89,9 +95,9 @@ function CampusModels({ goods, selectedIndex, onSelect, loading }: CampusModelsP
 
     const maxDim = Math.max(size.x, size.y, size.z);
     const fov = (camera.fov * Math.PI) / 180;
-    const distance = Math.max(maxDim / (2 * Math.tan(fov / 2)), maxDim) * 1.35;
+    const distance = Math.max(maxDim / (2 * Math.tan(fov / 2)), maxDim) * 1.7;
 
-    camera.position.set(distance * 0.9, distance * 0.72, distance * 1.05);
+    camera.position.set(distance * -0.9, distance * 0.72, distance * 1.05);
     camera.near = 0.1;
     camera.far = distance * 10;
     camera.lookAt(0, size.y * 0.2, 0);
@@ -145,7 +151,7 @@ function CampusModels({ goods, selectedIndex, onSelect, loading }: CampusModelsP
         const isSelected = selectedIndex === item.index;
 
         return (
-          <Html key={item.index} position={anchor.position} transform occlude="blending" distanceFactor={16}>
+          <Html key={item.index} position={anchor.position} transform distanceFactor={100}>
             <button
               onClick={(event) => {
                 event.stopPropagation();
@@ -179,7 +185,7 @@ function CampusModels({ goods, selectedIndex, onSelect, loading }: CampusModelsP
 function CampusSceneFallback() {
   return (
     <Html center>
-      <div className="rounded-full bg-black/45 px-4 py-2 text-sm font-medium text-white backdrop-blur">
+      <div className="rounded-full bg-black/45 px-12 py-6 text-sm font-medium text-white backdrop-blur">
         3D campus loading...
       </div>
     </Html>
@@ -197,11 +203,11 @@ export default function CampusScene({
       <Canvas
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true }}
-        camera={{ position: [180, 120, 180], fov: 35, near: 0.1, far: 3000 }}
+        camera={{ position: [180, 120, 180], fov: 50, near: 0.1, far: 3000 }}
         style={{ zIndex: 0 }}
       >
-        <color attach="background" args={["#95b75f"]} />
-        <fog attach="fog" args={["#95b75f", 220, 520]} />
+        <color attach="background" args={["#f7dfc4"]} />
+        {/* <fog attach="fog" args={["#95b75f", 220, 520]} /> */}
 
         <ambientLight intensity={1.7} />
         <hemisphereLight intensity={1.1} groundColor="#6f8553" />
@@ -209,6 +215,7 @@ export default function CampusScene({
         <directionalLight position={[-120, 80, -80]} intensity={0.85} />
 
         <Suspense fallback={<CampusSceneFallback />}>
+          <CampusModel path="/models/env.glb" />
           <CampusModels
             goods={goods}
             selectedIndex={selectedIndex}
@@ -226,3 +233,4 @@ export default function CampusScene({
 MODEL_PATHS.forEach((path) => {
   useGLTF.preload(path);
 });
+useGLTF.preload("/models/env.glb");
