@@ -20,10 +20,10 @@ export default function NftGridSection({
 }: NftGridSectionProps) {
   return (
     <section>
-      <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">{title}</p>
+      <p className="mb-3 text-[12px] font-bold tracking-widest text-[#78716D]">{title}</p>
 
       {items.length === 0 && emptyMessage ? (
-        <p className="text-sm text-slate-400">{emptyMessage}</p>
+        <p className="text-[12px] text-[#78716D]">{emptyMessage}</p>
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {items.map((nft) => (
