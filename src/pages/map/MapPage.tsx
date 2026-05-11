@@ -106,6 +106,7 @@ export default function MapPage() {
         goods={goods}
         selectedIndex={selectedIndex}
         onSelect={handleMarkerClick}
+        onClear={closeBottomSheet}
         loading={loading}
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-44 bg-[linear-gradient(to_top,rgba(68,84,41,0.5)_0%,rgba(68,84,41,0.16)_36%,transparent_100%)]" />
