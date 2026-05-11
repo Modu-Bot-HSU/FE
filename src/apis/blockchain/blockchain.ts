@@ -45,7 +45,7 @@ const MOCK_NFT_GOODS: NftGoodsItem[] = [
     index: 0,
     name: "공학관",
     description: "한성대학교 공학관 3D NFT",
-    price: "20",
+    price: "120",
     imageUrl: "/models/gonghak.glb",
     metadataUrl: "ipfs://mock/0",
     isSold: false,
