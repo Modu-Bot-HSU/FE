@@ -26,6 +26,6 @@ export default function RootLayout() {
       )}
       <Outlet />
       {!isAuthPage && <HomeSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
-    </MobileLayout> 
+    </MobileLayout>  
   );
 }
