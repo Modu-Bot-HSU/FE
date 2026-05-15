@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
 import {
   getHsBalance,
   getNftGoods,
@@ -10,7 +9,6 @@ import BuildingDetailModal from "../../components/map/BuildingDetailModal.tsx";
 import CampusScene from "../../components/map/CampusScene.tsx";
 
 export default function MapPage() {
-  const navigate = useNavigate();
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,8 +69,6 @@ export default function MapPage() {
     console.log("[NftMapPage] selectedItem changed", selectedItem);
   }, [selectedItem]);
 
-  const balanceText = useMemo(() => `Balance ${balance} tokens`, [balance]);
-
   const closeBottomSheet = () => {
     console.log("[NftMapPage] closeBottomSheet");
     setSelectedIndex(null);
@@ -106,13 +102,14 @@ export default function MapPage() {
         goods={goods}
         selectedIndex={selectedIndex}
         onSelect={handleMarkerClick}
+        onClear={closeBottomSheet}
         loading={loading}
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-44 bg-[linear-gradient(to_top,rgba(68,84,41,0.5)_0%,rgba(68,84,41,0.16)_36%,transparent_100%)]" />
 
       <BuildingDetailModal
         item={selectedItem}
-        balanceText={balanceText}
+        balance={balance}
         onPurchase={handlePurchase}
         onClose={closeBottomSheet}
         isPurchasing={isPurchasing}

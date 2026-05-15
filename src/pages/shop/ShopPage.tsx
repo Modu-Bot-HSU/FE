@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   getHsBalance,
   getNftGoods,
@@ -40,8 +40,6 @@ export default function ShopPage() {
     fetchShopData();
   }, [fetchShopData]);
 
-  const balanceText = useMemo(() => `Balance ${balance} tokens`, [balance]);
-
   const owned = goods.filter((g) => g.isSold);
   const available = goods.filter((g) => !g.isSold);
 
@@ -67,9 +65,9 @@ export default function ShopPage() {
   };
 
   return (
-    <div className="relative flex h-full flex-col bg-white">
+    <div className="relative flex h-full flex-col bg-[#F5F5F4]">
       <div className="flex items-start justify-end px-4 py-10">
-        <BalancePill text={balanceText} />
+        <BalancePill balance={balance} />
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
@@ -87,6 +85,8 @@ export default function ShopPage() {
               emptyMessage="소유한 NFT가 없습니다."
             />
 
+            <div className="border-t border-[#d6d3d1]" />
+
             <NftGridSection
               title="AVAILABLE"
               items={available}
@@ -99,7 +99,7 @@ export default function ShopPage() {
 
       <BuildingDetailModal
         item={selectedItem}
-        balanceText={balanceText}
+        balance={balance}
         onPurchase={handlePurchase}
         onClose={() => {
           setSelectedItem(null);

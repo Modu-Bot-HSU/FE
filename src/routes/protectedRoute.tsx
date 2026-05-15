@@ -1,7 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 const AUTH_LOGIN_PATH = "/auth/login";
-const DEFAULT_AUTHENTICATED_PATH = "/";
 
 const hasAccessToken = () => {
   if (typeof window === "undefined") return false;
