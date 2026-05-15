@@ -10,6 +10,7 @@ import NftCollectionPage from "../pages/shop/ShopPage.tsx";
 import DailyQPage from "../pages/DailyQPage.tsx";
 import ProfilePage from "../pages/profile/ProfilePage.tsx";
 import Splash from "../pages/chat/Splash.tsx";
+import AdminPage from "../pages/admin/AdminPage.tsx";
 import { ProtectedRoute, PublicOnlyRoute } from "./protectedRoute.tsx";
 
 const routes = [
@@ -35,6 +36,7 @@ const routes = [
           { path: "campus", element: <NftMapPage /> },
           { path: "campus/collection", element: <NftCollectionPage /> },
           { path: "profile", element: <ProfilePage /> },
+          { path: "admin", element: <AdminPage /> },
         ],
       },
       { path: "about", element: <About /> },
