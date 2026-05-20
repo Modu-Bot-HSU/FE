@@ -98,8 +98,8 @@ export default function AdminPage() {
       <div className="mx-auto max-w-6xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-[#002A47]">관리자 대시보드</h1>
-          <p className="mt-2 text-[14px] text-[#78716D]">Daily Q 응답 승인 및 토큰 부여</p>
+          <h1 className="text-2xl font-bold text-[#002A47]">관리자 대시보드</h1>
+          <p className="mt-2 text-[12px] text-[#78716D]">Daily Q 응답 승인 및 토큰 부여</p>
         </div>
 
         {/* Message Toast */}
