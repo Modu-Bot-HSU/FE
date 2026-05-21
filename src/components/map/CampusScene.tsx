@@ -2,7 +2,7 @@ import { Suspense, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Html, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Box3, Group, PerspectiveCamera, Vector3 } from "three";
-import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+import type { OrbitControls as OrbitControlsImpl } from "three/examples/jsm/controls/OrbitControls.js";
 import type { NftGoodsItem } from "../../apis/blockchain/blockchain";
 
 const MODEL_PATHS = [
@@ -247,7 +247,9 @@ function CampusModels({ goods, selectedIndex, onSelect, loading }: CampusModelsP
         })}
       </group>
       <OrbitControls
-        ref={controlsRef}
+        ref={(node) => {
+          controlsRef.current = node as unknown as OrbitControlsImpl;
+        }}
         enablePan={false}
         maxPolarAngle={Math.PI / 2.15}
         minDistance={80}
