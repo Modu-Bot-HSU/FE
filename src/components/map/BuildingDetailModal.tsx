@@ -1,3 +1,5 @@
+import { useContext, useEffect } from "react";
+import { SidebarContext } from "../../contexts/SidebarContext";
 import type { NftGoodsItem } from "../../apis/blockchain/blockchain";
 import BalancePill from "../common/BalancePill";
 
@@ -26,6 +28,14 @@ export default function BuildingDetailModal({
   purchaseMessage,
   closeLabel = "map",
 }: BuildingDetailModalProps) {
+  const sidebarContext = useContext(SidebarContext);
+
+  useEffect(() => {
+    if (item && sidebarContext?.open) {
+      onClose();
+    }
+  }, [sidebarContext?.open]);
+
   if (!item) return null;
 
   const isSold = item.isSold;
@@ -39,13 +49,20 @@ export default function BuildingDetailModal({
     numericBalance < numericPrice;
 
   return (
-    <div
-      className="absolute inset-x-0 bottom-0 z-[80]"
-      onClick={(event) => event.stopPropagation()}
-    >
-      {balance !== undefined && (
-        <BalancePill balance={balance} className="mb-2 ml-auto mr-4" />
-      )}
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-[79]"
+        onClick={onClose}
+      />
+
+      <div
+        className="fixed inset-x-0 bottom-0 z-[80]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {balance !== undefined && (
+          <BalancePill balance={balance} className="mb-2 ml-auto mr-4" />
+        )}
 
       <div className="max-h-[75vh] min-h-[62vh] overflow-y-auto rounded-t-3xl bg-[#F5F5F4] p-5 shadow-[0_-8px_24px_rgba(0,0,0,0.18)]">
         <span
@@ -115,5 +132,6 @@ export default function BuildingDetailModal({
         </button>
       </div>
     </div>
+    </>
   );
 }
