@@ -36,10 +36,12 @@ export default function ProfilePage() {
   const [balance, setBalance] = useState("12");
   const [ownedNfts, setOwnedNfts] = useState<NftGoodsItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<NftGoodsItem | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
   useEffect(() => {
+    setLoading(true);
     Promise.allSettled([getHsBalance(accessToken), getNftGoods(accessToken)])
       .then(([balanceResult, goodsResult]) => {
         if (balanceResult.status === "fulfilled") {
@@ -54,6 +56,9 @@ export default function ProfilePage() {
       })
       .catch(() => {
         setOwnedNfts([]);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, [accessToken]);
 
@@ -135,6 +140,7 @@ export default function ProfilePage() {
           onItemClick={setSelectedItem}
           badgeText="Owned"
           emptyMessage="소유한 건물이 없습니다."
+          isLoading={loading}
         />
       </section>
 
