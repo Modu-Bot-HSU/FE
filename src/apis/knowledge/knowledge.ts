@@ -1,6 +1,8 @@
 import { API_BASE_URL, getBearerAuthHeaders, parseApiResponse } from "../httpClient";
 import type {
   KnowledgeDeleteBody,
+  KnowledgeSubmissionItem,
+  KnowledgeSubmissionStatus,
   KnowledgeListParams,
   KnowledgeListResponse,
   KnowledgeMutationResponse,
@@ -65,4 +67,23 @@ export async function requestKnowledgeDelete(
     body: JSON.stringify(body),
   });
   return parseApiResponse<KnowledgeMutationResponse>(response);
+}
+
+/** GET /knowledge/my-submissions */
+export async function fetchMySubmissions(
+  status?: KnowledgeSubmissionStatus,
+): Promise<KnowledgeSubmissionItem[]> {
+  const query = new URLSearchParams();
+  if (status) query.set("status", status);
+  const queryString = query.toString();
+
+  const response = await fetch(
+    `${API_BASE_URL}/knowledge/my-submissions${queryString ? `?${queryString}` : ""}`,
+    {
+      method: "GET",
+      headers: { ...getBearerAuthHeaders() },
+    },
+  );
+
+  return parseApiResponse<KnowledgeSubmissionItem[]>(response);
 }

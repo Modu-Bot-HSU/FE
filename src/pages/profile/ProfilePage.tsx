@@ -5,6 +5,7 @@ import {
   getNftGoods,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
+import { fetchMySubmissions } from "../../apis/knowledge/knowledge";
 import { useAuthStore } from "../../store/useAuthStore";
 import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
 import NftGridSection from "../../components/shop/NftGridSection";
@@ -12,20 +13,10 @@ import BuildingDetailModal from "../../components/map/BuildingDetailModal";
 
 type ProfileMockData = {
   walletType: string;
-  dailyQ: {
-    received: number;
-    pending: number;
-    notCredited: number;
-  };
 };
 
 const profileMock: ProfileMockData = {
   walletType: "MetaMask",
-  dailyQ: {
-    received: 12,
-    pending: 4,
-    notCredited: 2,
-  },
 };
 
 
@@ -37,25 +28,51 @@ export default function ProfilePage() {
   const [ownedNfts, setOwnedNfts] = useState<NftGoodsItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<NftGoodsItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [submissionStats, setSubmissionStats] = useState({
+    received: 0,
+    pending: 0,
+    notCredited: 0,
+  });
 
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
   useEffect(() => {
     setLoading(true);
-    Promise.allSettled([getHsBalance(accessToken), getNftGoods(accessToken)])
-      .then(([balanceResult, goodsResult]) => {
+    Promise.allSettled([
+      getHsBalance(accessToken),
+      getNftGoods(accessToken),
+      fetchMySubmissions(),
+    ])
+      .then(([balanceResult, goodsResult, submissionsResult]) => {
         if (balanceResult.status === "fulfilled") {
+          console.log("[ProfilePage] balance:", balanceResult.value);
           setBalance(balanceResult.value.balance);
+        } else {
+          console.warn("[ProfilePage] balance fetch failed:", balanceResult.reason);
         }
 
         if (goodsResult.status === "fulfilled") {
+          console.log("[ProfilePage] nftGoods:", goodsResult.value);
           setOwnedNfts(goodsResult.value.filter((item) => item.isSold));
         } else {
+          console.warn("[ProfilePage] nftGoods fetch failed:", goodsResult.reason);
           setOwnedNfts([]);
+        }
+
+        if (submissionsResult.status === "fulfilled") {
+          console.log("[ProfilePage] submissions:", submissionsResult.value);
+          const received = submissionsResult.value.filter((item) => item.status === "APPROVED").length;
+          const pending = submissionsResult.value.filter((item) => item.status === "PENDING").length;
+          const notCredited = submissionsResult.value.filter((item) => item.status === "REJECTED").length;
+          setSubmissionStats({ received, pending, notCredited });
+        } else {
+          console.warn("[ProfilePage] submissions fetch failed:", submissionsResult.reason);
+          setSubmissionStats({ received: 0, pending: 0, notCredited: 0 });
         }
       })
       .catch(() => {
         setOwnedNfts([]);
+        setSubmissionStats({ received: 0, pending: 0, notCredited: 0 });
       })
       .finally(() => {
         setLoading(false);
@@ -117,17 +134,17 @@ export default function ProfilePage() {
 
         <div className="flex rounded-xl border border-[#c9c9c9] bg-[#f4f4f4]">
           <div className="flex-1 py-3 text-center">
-            <p className="text-[24px] font-bold leading-none text-[#2D7A2D]">{profile.dailyQ.received}</p>
+            <p className="text-[24px] font-bold leading-none text-[#2D7A2D]">{submissionStats.received}</p>
             <p className="mt-1 text-[12px] text-[#2D7A2D]">Received</p>
           </div>
           <div className="my-3 w-px bg-[#d5d5d5]" />
           <div className="flex-1 py-3 text-center">
-            <p className="text-[24px] font-bold leading-none text-[#B35900]">{profile.dailyQ.pending}</p>
+            <p className="text-[24px] font-bold leading-none text-[#B35900]">{submissionStats.pending}</p>
             <p className="mt-1 text-[12px] text-[#B35900]">Pending</p>
           </div>
           <div className="my-3 w-px bg-[#d5d5d5]" />
           <div className="flex-1 py-3 text-center">
-            <p className="text-[24px] font-bold leading-none text-[#C0392B]">{profile.dailyQ.notCredited}</p>
+            <p className="text-[24px] font-bold leading-none text-[#C0392B]">{submissionStats.notCredited}</p>
             <p className="mt-1 text-[12px] text-[#C0392B]">Not Credited</p>
           </div>
         </div>
