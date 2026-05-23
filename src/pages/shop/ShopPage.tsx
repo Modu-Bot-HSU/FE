@@ -83,6 +83,7 @@ export default function ShopPage() {
               onItemClick={setSelectedItem}
               badgeText="Owned"
               emptyMessage="소유한 NFT가 없습니다."
+              isLoading={loading}
             />
 
             <div className="border-t border-[#d6d3d1]" />
@@ -92,6 +93,7 @@ export default function ShopPage() {
               items={available}
               onItemClick={setSelectedItem}
               showComingSoonPlaceholder
+              isLoading={loading}
             />
           </>
         )}

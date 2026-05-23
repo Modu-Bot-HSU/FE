@@ -1,5 +1,6 @@
 import type { NftGoodsItem } from "../../apis/blockchain/blockchain";
 import NftBuildingCard from "./NftBuildingCard";
+import NftCardSkeleton from "./NftCardSkeleton";
 
 type NftGridSectionProps = {
   title: string;
@@ -8,6 +9,7 @@ type NftGridSectionProps = {
   badgeText?: string;
   emptyMessage?: string;
   showComingSoonPlaceholder?: boolean;
+  isLoading?: boolean;
 };
 
 export default function NftGridSection({
@@ -17,12 +19,21 @@ export default function NftGridSection({
   badgeText,
   emptyMessage,
   showComingSoonPlaceholder = false,
+  isLoading = false,
 }: NftGridSectionProps) {
+  const skeletonCount = 4;
+
   return (
     <section>
       <p className="mb-3 text-[12px] font-bold tracking-widest text-[#78716D]">{title}</p>
 
-      {items.length === 0 && emptyMessage ? (
+      {isLoading ? (
+        <div className="grid grid-cols-2 gap-3">
+          {Array.from({ length: skeletonCount }).map((_, idx) => (
+            <NftCardSkeleton key={idx} />
+          ))}
+        </div>
+      ) : items.length === 0 && emptyMessage ? (
         <p className="text-[12px] text-[#78716D]">{emptyMessage}</p>
       ) : (
         <div className="grid grid-cols-2 gap-3">
