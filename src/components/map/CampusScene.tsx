@@ -19,7 +19,19 @@ const MODEL_PATHS = [
   "/models/tamgu.glb",
 ] as const;
 
-const REVERSE_FOCUS_INDEXES = [0, 1, 4, 6, 7, 10];
+const REVERSE_FOCUS_INDEXES = [0, 1, 4, 6, 7, 9, 10];
+const LOW_FOCUS_INDEXES = [0, 1, 6, 7];
+const GONGHAK_INDEX = 0;
+const JISEON_INDEX = 1;
+const NAKSAN_INDEX = 2;
+const WUCHON_INDEX = 3;
+const YEONGU_INDEX = 4;
+const JINRI_INDEX = 6;
+const HAKSONG_INDEX = 7;
+const CHANGUI_INDEX = 8;
+const MIRAE_INDEX = 9;
+const TAMGU_INDEX = 10;
+const DEFAULT_CAMERA_INDEXES = [5, 6, 7];
 
 type CampusModelProps = {
   path: string;
@@ -101,8 +113,42 @@ function CampusModels({ goods, selectedIndex, onSelect, loading }: CampusModelsP
       const topLocal = root.worldToLocal(topWorld.clone());
       const modelSize = modelBox.getSize(new Vector3());
       const focusDistance = Math.max(modelSize.x, modelSize.y, modelSize.z, 24) * 4.2;
-      const target = new Vector3(centerWorld.x, modelBox.min.y - modelSize.y * 0.6, centerWorld.z);
+      const targetOffset = LOW_FOCUS_INDEXES.includes(item.index) ? 2 : 0.6;
+      const target = new Vector3(centerWorld.x, modelBox.min.y - modelSize.y * targetOffset, centerWorld.z);
       const focusX = REVERSE_FOCUS_INDEXES.includes(item.index) ? focusDistance * 0.85 : -focusDistance * 0.85;
+      const cameraY = item.index === GONGHAK_INDEX ? 0.7 : item.index === JISEON_INDEX ? 0.6 : item.index === NAKSAN_INDEX ? 0.8 : item.index === WUCHON_INDEX ? 0.9 : item.index === YEONGU_INDEX ? 0.8 : item.index === CHANGUI_INDEX ? 0.8 : item.index === MIRAE_INDEX ? 0.8 : item.index === TAMGU_INDEX ? 0.8 : DEFAULT_CAMERA_INDEXES.includes(item.index) ? 0.58 : 0.3;
+      const cameraOffset = new Vector3(focusX, focusDistance * cameraY, focusDistance);
+      if (item.index === GONGHAK_INDEX || item.index === JISEON_INDEX) {
+        cameraOffset.multiplyScalar(0.5);
+      }
+      if (item.index === NAKSAN_INDEX) {
+        cameraOffset.multiplyScalar(0.4);
+      }
+      if (item.index === WUCHON_INDEX) {
+        cameraOffset.multiplyScalar(0.5);
+      }
+      if (item.index === YEONGU_INDEX) {
+        cameraOffset.multiplyScalar(0.7);
+      }
+      if (item.index === CHANGUI_INDEX) {
+        cameraOffset.multiplyScalar(0.6);
+        cameraOffset.applyAxisAngle(new Vector3(0, 1, 0), (Math.PI * -15) / 180);
+      }
+      if (item.index === MIRAE_INDEX) {
+        cameraOffset.multiplyScalar(0.6);
+        cameraOffset.applyAxisAngle(new Vector3(0, 1, 0), (Math.PI * 20) / 180);
+      }
+      if (item.index === TAMGU_INDEX) {
+        cameraOffset.multiplyScalar(0.5);
+      }
+      if (item.index === JINRI_INDEX) {
+        cameraOffset.multiplyScalar(0.5);
+        cameraOffset.applyAxisAngle(new Vector3(0, 1, 0), (Math.PI * 15) / 180);
+      }
+      if (item.index === HAKSONG_INDEX) {
+        cameraOffset.multiplyScalar(0.78);
+        cameraOffset.applyAxisAngle(new Vector3(0, 1, 0), (Math.PI * 25) / 180);
+      }
 
       nextAnchors.push({
         index: item.index,
@@ -111,7 +157,7 @@ function CampusModels({ goods, selectedIndex, onSelect, loading }: CampusModelsP
       nextFocusItems.push({
         index: item.index,
         target,
-        cameraPosition: target.clone().add(new Vector3(focusX, focusDistance * 0.58, focusDistance)),
+        cameraPosition: target.clone().add(cameraOffset),
       });
     }
 
