@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   getHsBalance,
   getNftGoods,
@@ -10,7 +9,6 @@ import BuildingDetailModal from "../../components/map/BuildingDetailModal.tsx";
 import CampusScene from "../../components/map/CampusScene.tsx";
 
 export default function MapPage() {
-  const navigate = useNavigate();
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);

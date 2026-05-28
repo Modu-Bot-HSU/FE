@@ -11,6 +11,7 @@ export const useWalletLogin = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<LoginUiStep>("wallet");
   const [signingAddressRaw, setSigningAddressRaw] = useState("");
+  const [isNavigatingToConfirm, setIsNavigatingToConfirm] = useState(false);
   const { values, handleChange, setValues } = useForm({ walletAddress: "" });
   const loginMutation = useLoginMutation();
 
@@ -42,6 +43,7 @@ export const useWalletLogin = () => {
       alert("올바른 지갑 주소를 입력해주세요.");
       return;
     }
+    setIsNavigatingToConfirm(true);
     try {
       if (!window.ethereum) {
         alert("메타마스크 설치가 필요합니다.");
@@ -64,6 +66,8 @@ export const useWalletLogin = () => {
       setStep("confirm");
     } catch (e) {
       alertEthereumFlowError(e);
+    } finally {
+      setIsNavigatingToConfirm(false);
     }
   };
 
@@ -92,6 +96,7 @@ export const useWalletLogin = () => {
     goToConfirm,
     confirmLogin,
     isPending: loginMutation.isPending,
+    isNavigatingToConfirm,
     displayAddress: normalizedInput(),
     navigate,
   };

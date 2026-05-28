@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { askChat } from "../../apis/chat/ask";
 
 export type ChatRole = "user" | "assistant";
 
@@ -15,33 +16,46 @@ export const useHomeChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
 
-  const sendText = useCallback((text: string) => {
+  const sendText = useCallback(async (text: string) => {
     const t = text.trim();
     if (!t) return;
     setMessages((prev) => [...prev, { id: id(), role: "user", text: t }]);
     setInput("");
     setIsTyping(true);
-    window.setTimeout(() => {
+    try {
+      const response = await askChat({ question: t });
       setMessages((prev) => [
         ...prev,
         {
           id: id(),
           role: "assistant",
-          text: "Thanks for your message. Chat replies will connect to the campus assistant API here.",
+          text: response.answer,
         },
       ]);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "답변을 가져오지 못했습니다. 잠시 후 다시 시도해주세요.";
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: id(),
+          role: "assistant",
+          text: message,
+        },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 900);
+    }
   }, []);
 
   const sendFromInput = useCallback(() => {
-    sendText(input);
+    void sendText(input);
   }, [input, sendText]);
 
   const applySuggestion = useCallback(
     (label: string) => {
       setInput(label);
-      sendText(label);
+      void sendText(label);
     },
     [sendText],
   );

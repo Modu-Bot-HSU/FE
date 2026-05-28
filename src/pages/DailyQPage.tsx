@@ -1,50 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { fetchMyKnowledgeSubmissions, submitKnowledge } from "../apis/knowledge/knowledge";
+import type { KnowledgeSubmissionItem, KnowledgeSubmissionStatus } from "../apis/knowledge/types";
+import { fetchNextQuestion, type QuestionItem } from "../apis/questions/questions";
 
 type Step = "swipe" | "write" | "submit" | "submitted" | "history";
-type HistoryStatus = "Approved" | "Pending" | "Rejected";
 
-type HistoryItem = {
-  id: number;
-  question: string;
-  answer: string;
-  date: string;
-  credits: number;
-  status: HistoryStatus;
-};
-
-const QUESTION = "Which building has the best study rooms on campus?";
-
-const MOCK_HISTORY: HistoryItem[] = [
-  {
-    id: 1,
-    question: "What's the fastest food option near engineering?",
-    answer: "The cart outside Building C - maybe 2-3 min wait between 12-1pm.",
-    date: "Apr 17",
-    credits: 1,
-    status: "Approved",
-  },
-  {
-    id: 2,
-    question: "What's the fastest food option near engineering?",
-    answer: "The cart outside Building C - maybe 2-3 min wait between 12-1pm.",
-    date: "Apr 17",
-    credits: 1,
-    status: "Pending",
-  },
-  {
-    id: 3,
-    question: "What's the fastest food option near engineering?",
-    answer: "The cart outside Building C - maybe 2-3 min wait between 12-1pm.",
-    date: "Apr 17",
-    credits: 1,
-    status: "Rejected",
-  },
-];
-
-const statusColor: Record<HistoryStatus, string> = {
-  Approved: "text-emerald-600 bg-emerald-50",
-  Pending: "text-amber-600 bg-amber-50",
-  Rejected: "text-rose-600 bg-rose-50",
+const statusColor: Record<KnowledgeSubmissionStatus, string> = {
+  APPROVED: "text-emerald-600 bg-emerald-50",
+  PENDING: "text-amber-600 bg-amber-50",
+  REJECTED: "text-rose-600 bg-rose-50",
 };
 
 const primaryBtn = "w-full rounded-xl bg-[#FF5C00] py-3 text-center text-sm font-semibold text-white";
@@ -54,24 +18,91 @@ const secondaryBtn =
 export default function DailyQPage() {
   const [step, setStep] = useState<Step>("swipe");
   const [answer, setAnswer] = useState("");
+  const [question, setQuestion] = useState<QuestionItem | null>(null);
+  const [remaining, setRemaining] = useState(0);
+  const [history, setHistory] = useState<KnowledgeSubmissionItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const answerLength = useMemo(() => answer.trim().length, [answer]);
   const canSubmit = answerLength >= 10;
 
+  const loadQuestion = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetchNextQuestion();
+      setQuestion(response.data);
+      setRemaining(response.remaining);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "질문을 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadHistory = async (status?: KnowledgeSubmissionStatus) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const items = await fetchMyKnowledgeSubmissions(status ? { status } : {});
+      setHistory(items);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "제출 기록을 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadQuestion();
+    void loadHistory();
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!question || !canSubmit) return;
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await submitKnowledge({
+        category: question.category,
+        content: answer.trim(),
+        questionId: question.id,
+      });
+      setStep("submitted");
+      setAnswer("");
+      await Promise.all([loadQuestion(), loadHistory()]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "제출 중 오류가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#F5F5F5] px-6 pt-24 pb-8">
+      {error ? <p className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
       {(step === "swipe" || step === "write" || step === "submit") && (
         <section className="flex min-h-[78vh] flex-col">
-          <p className="mb-6 text-4xl font-semibold leading-tight text-[#0f263a]">{QUESTION}</p>
+          <p className="mb-2 text-sm text-gray-500">남은 질문 기회: {remaining}</p>
+          <p className="mb-6 text-4xl font-semibold leading-tight text-[#0f263a]">
+            {question?.text ?? (isLoading ? "질문을 불러오는 중..." : "답변 가능한 질문이 없습니다.")}
+          </p>
 
           {step === "swipe" && (
             <>
               <p className="mt-auto text-xs text-gray-400">Swipe for next question</p>
               <div className="mt-2 space-y-2">
-                <button type="button" className={primaryBtn} onClick={() => setStep("write")}>
+                <button
+                  type="button"
+                  className={primaryBtn}
+                  onClick={() => setStep("write")}
+                  disabled={!question || isLoading}
+                >
                   I know this
                 </button>
-                <button type="button" className={secondaryBtn}>
+                <button type="button" className={secondaryBtn} onClick={() => void loadQuestion()}>
                   Skip
                 </button>
               </div>
@@ -97,12 +128,16 @@ export default function DailyQPage() {
                     <button
                       type="button"
                       className={`${primaryBtn} disabled:bg-orange-300`}
-                      disabled={!canSubmit}
+                      disabled={!canSubmit || !question}
                       onClick={() => setStep("submit")}
                     >
                       Submit Answer
                     </button>
-                    <button type="button" className="w-full text-center text-sm font-medium text-gray-500">
+                    <button
+                      type="button"
+                      className="w-full text-center text-sm font-medium text-gray-500"
+                      onClick={() => setStep("history")}
+                    >
                       Go back to questions
                     </button>
                   </>
@@ -111,10 +146,10 @@ export default function DailyQPage() {
                     <button
                       type="button"
                       className={`${primaryBtn} disabled:bg-orange-300`}
-                      disabled={!canSubmit}
-                      onClick={() => setStep("submitted")}
+                      disabled={!canSubmit || !question || isSubmitting}
+                      onClick={() => void handleSubmit()}
                     >
-                      Submit Answer
+                      {isSubmitting ? "Submitting..." : "Submit Answer"}
                     </button>
                     <button
                       type="button"
@@ -144,7 +179,14 @@ export default function DailyQPage() {
             <button type="button" className={primaryBtn} onClick={() => setStep("history")}>
               View answer history
             </button>
-            <button type="button" className={secondaryBtn} onClick={() => setStep("swipe")}>
+            <button
+              type="button"
+              className={secondaryBtn}
+              onClick={() => {
+                setStep("swipe");
+                void loadQuestion();
+              }}
+            >
               Go back home
             </button>
           </div>
@@ -153,25 +195,51 @@ export default function DailyQPage() {
 
       {step === "history" && (
         <section className="min-h-[78vh]">
-          <h2 className="mb-4 text-4xl font-semibold text-[#0f263a]">Daily Q History</h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-4xl font-semibold text-[#0f263a]">Daily Q History</h2>
+            <button type="button" className={secondaryBtn} onClick={() => setStep("swipe")}>
+              Back
+            </button>
+          </div>
+          <div className="mb-3 flex gap-2">
+            <button type="button" className={secondaryBtn} onClick={() => void loadHistory()}>
+              ALL
+            </button>
+            <button type="button" className={secondaryBtn} onClick={() => void loadHistory("PENDING")}>
+              PENDING
+            </button>
+            <button type="button" className={secondaryBtn} onClick={() => void loadHistory("APPROVED")}>
+              APPROVED
+            </button>
+            <button type="button" className={secondaryBtn} onClick={() => void loadHistory("REJECTED")}>
+              REJECTED
+            </button>
+          </div>
           <div className="space-y-3">
-            {MOCK_HISTORY.map((item) => (
+            {history.map((item) => (
               <article key={item.id} className="rounded-xl border border-gray-200 bg-white p-3">
                 <div className="mb-1 flex items-start justify-between gap-3">
-                  <p className="text-xs font-semibold text-slate-700">{item.question}</p>
+                  <p className="text-xs font-semibold text-slate-700">
+                    {item.originalQuestion ?? "질문 텍스트 없음"}
+                  </p>
                   <span
-                    className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-semibold ${statusColor[item.status]}`}
+                    className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-semibold ${
+                      statusColor[item.status]
+                    }`}
                   >
                     {item.status}
                   </span>
                 </div>
-                <p className="text-xs leading-relaxed text-gray-500">{item.answer}</p>
+                <p className="text-xs leading-relaxed text-gray-500">{item.content}</p>
                 <div className="mt-2 flex items-center justify-between text-[11px] text-gray-400">
-                  <span>{item.date}</span>
-                  <span>+{item.credits} credits</span>
+                  <span>{new Date(item.createdAt).toLocaleString()}</span>
+                  <span>{item.type}</span>
                 </div>
               </article>
             ))}
+            {!isLoading && history.length === 0 ? (
+              <p className="py-10 text-center text-sm text-gray-500">제출 기록이 없습니다.</p>
+            ) : null}
           </div>
         </section>
       )}

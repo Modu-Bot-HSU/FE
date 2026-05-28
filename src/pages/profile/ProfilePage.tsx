@@ -9,8 +9,10 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
 import NftGridSection from "../../components/shop/NftGridSection";
 import BuildingDetailModal from "../../components/map/BuildingDetailModal";
+import { fetchMyKnowledgeSubmissions } from "../../apis/knowledge/knowledge";
+import { countCreateSubmissionStats } from "../../features/knowledge/knowledgeSubmissionStats";
 
-type ProfileMockData = {
+type ProfileDailyQData = {
   walletType: string;
   dailyQ: {
     received: number;
@@ -19,12 +21,12 @@ type ProfileMockData = {
   };
 };
 
-const profileMock: ProfileMockData = {
+const defaultDailyQ: ProfileDailyQData = {
   walletType: "MetaMask",
   dailyQ: {
-    received: 12,
-    pending: 4,
-    notCredited: 2,
+    received: 0,
+    pending: 0,
+    notCredited: 0,
   },
 };
 
@@ -36,6 +38,7 @@ export default function ProfilePage() {
   const [balance, setBalance] = useState("12");
   const [ownedNfts, setOwnedNfts] = useState<NftGoodsItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<NftGoodsItem | null>(null);
+  const [dailyQStats, setDailyQStats] = useState(defaultDailyQ.dailyQ);
 
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
@@ -57,14 +60,21 @@ export default function ProfilePage() {
       });
   }, [accessToken]);
 
+  useEffect(() => {
+    fetchMyKnowledgeSubmissions()
+      .then((items) => setDailyQStats(countCreateSubmissionStats(items)))
+      .catch(() => setDailyQStats(defaultDailyQ.dailyQ));
+  }, []);
+
   const profile = useMemo(
     () => ({
       name: tempUser?.name || "Sean Kim",
       email: tempUser?.email || "sean@university.edu",
       walletAddress: tempUser?.walletAddress || "0x4a3b...f3b1",
-      ...profileMock,
+      walletType: defaultDailyQ.walletType,
+      dailyQ: dailyQStats,
     }),
-    [tempUser],
+    [dailyQStats, tempUser],
   );
 
   const myBuildings = ownedNfts.length > 0 ? ownedNfts : [];
@@ -107,7 +117,7 @@ export default function ProfilePage() {
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-xl font-semibold tracking-wide text-[#6f6f6f]">DAILY Q HISTORY</h2>
           {/* daily q history로 이동 */}
-          <button type="button" onClick={() => navigate("/daily-q/history")} className="text-xl font-semibold text-[#10314f]">View History →</button>
+          <button type="button" onClick={() => navigate("/daily-q")} className="text-xl font-semibold text-[#10314f]">View History →</button>
         </div>
 
         <div className="flex rounded-xl border border-[#c9c9c9] bg-[#f4f4f4]">

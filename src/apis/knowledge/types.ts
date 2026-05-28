@@ -47,7 +47,7 @@ export type KnowledgeListParams = {
 export type KnowledgeSubmitBody = {
   category: KnowledgeCategory;
   content: string;
-  originalQuestion?: string;
+  questionId: string;
 };
 
 export type KnowledgeMutationResponse = {
@@ -58,9 +58,34 @@ export type KnowledgeMutationResponse = {
 export type KnowledgeUpdateBody = {
   category: KnowledgeCategory;
   content: string;
-  originalQuestion?: string;
+  questionId: string;
 };
 
 export type KnowledgeDeleteBody = {
   reason?: string;
+};
+
+export type KnowledgeSubmissionStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export type KnowledgeSubmissionType = "CREATE" | "UPDATE" | "DELETE";
+
+export type KnowledgeSubmissionItem = {
+  id: string;
+  type: KnowledgeSubmissionType;
+  status: KnowledgeSubmissionStatus;
+  knowledgeId: string | null;
+  submittedByWallet: string;
+  category: string;
+  content: string;
+  questionId: string | null;
+  originalQuestion: string | null;
+  rejectReason: string | null;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type KnowledgeSubmissionListParams = {
+  status?: KnowledgeSubmissionStatus;
 };
