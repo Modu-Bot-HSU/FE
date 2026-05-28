@@ -13,7 +13,7 @@ export default function NftBuildingCard({ item, badgeText, onClick }: NftBuildin
       className="relative overflow-hidden rounded-xl border border-slate-200 bg-white text-left"
       type="button"
     >
-      <div className="aspect-[4/3] bg-slate-100">
+      <div className="aspect-[6/4] bg-slate-100">
         {item.imageUrl ? (
           <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
         ) : (
@@ -30,9 +30,10 @@ export default function NftBuildingCard({ item, badgeText, onClick }: NftBuildin
       )}
 
       <div className="p-2.5">
-        <p className="truncate text-[18px] font-semibold leading-tight text-[#10314f]">{item.name}</p>
-        <p className="mt-1 text-[13px] leading-none text-slate-500">
-          <span className="font-bold text-[#ff5b00]">{item.price}</span> tokens
+        <p className="truncate text-base font-semibold leading-tight text-[#10314f]">{item.name}</p>
+        <p className="mt-1 text-[20px] leading-none text-slate-500">
+          <span className="font-bold text-[#fc5100] ">{item.price}</span>{" "}
+          <span className="text-[12px] text-[#78716D]">tokens</span>
         </p>
       </div>
     </button>

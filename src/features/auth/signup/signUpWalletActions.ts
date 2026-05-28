@@ -4,33 +4,35 @@ import { getErrorMessage, isHansungEmail } from "./signUpHelpers";
 
 type SignupMut = UseMutationResult<unknown, unknown, SignUpRequest, unknown>;
 
+export type SignUpCompleteProfile = { email: string; wallet: string };
+
 export async function runSignUpComplete(
   email: string,
   name: string,
   walletAddress: string,
   setWalletAddress: (w: string) => void,
   signupMutation: SignupMut,
-): Promise<boolean> {
+): Promise<SignUpCompleteProfile | null> {
   if (!isHansungEmail(email)) {
     alert("한성대학교 이메일만 사용 가능합니다.");
-    return false;
+    return null;
   }
 
   const trimmedWalletAddress = walletAddress.trim();
 
   if (!trimmedWalletAddress || !name) {
     alert("이메일, 지갑주소, 이름을 입력해주세요.");
-    return false;
+    return null;
   }
 
   if (!/^0x/i.test(trimmedWalletAddress) || trimmedWalletAddress.length !== 42) {
     alert("올바른 지갑 주소를 입력해주세요.");
-    return false;
+    return null;
   }
 
   if (!window.ethereum) {
     alert("회원가입 전 메타마스크 연결이 필요합니다.");
-    return false;
+    return null;
   }
 
   let accounts: string[];
@@ -40,12 +42,12 @@ export async function runSignUpComplete(
     })) as string[];
   } catch (error: unknown) {
     alert(getErrorMessage(error));
-    return false;
+    return null;
   }
   const activeAccountRaw = (accounts[0] ?? "").trim();
   if (!activeAccountRaw) {
     alert("메타마스크 계정을 선택해주세요.");
-    return false;
+    return null;
   }
 
   if (
@@ -55,17 +57,25 @@ export async function runSignUpComplete(
     alert(
       "입력한 지갑 주소와 메타마스크에서 선택한 계정이 다릅니다. 주소를 맞추거나 메타마스크 계정을 바꿔주세요.",
     );
-    return false;
+    return null;
   }
 
   setWalletAddress(activeAccountRaw);
 
-  await signupMutation.mutateAsync({
-    email,
-    walletAddress: activeAccountRaw,
-    name,
-  });
-  return true;
+  const emailNorm = email.trim().toLowerCase();
+  const walletNorm = normalizeWalletAddress(activeAccountRaw);
+
+  try {
+    await signupMutation.mutateAsync({
+      email,
+      walletAddress: activeAccountRaw,
+      name,
+    });
+  } catch {
+    return null;
+  }
+
+  return { email: emailNorm, wallet: walletNorm };
 }
 
 export async function runConnectMetaMask(setWalletAddress: (w: string) => void): Promise<void> {

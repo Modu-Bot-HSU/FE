@@ -69,8 +69,6 @@ export default function MapPage() {
     console.log("[NftMapPage] selectedItem changed", selectedItem);
   }, [selectedItem]);
 
-  const balanceText = useMemo(() => `Balance ${balance} tokens`, [balance]);
-
   const closeBottomSheet = () => {
     console.log("[NftMapPage] closeBottomSheet");
     setSelectedIndex(null);
@@ -111,7 +109,7 @@ export default function MapPage() {
 
       <BuildingDetailModal
         item={selectedItem}
-        balanceText={balanceText}
+        balance={balance}
         onPurchase={handlePurchase}
         onClose={closeBottomSheet}
         isPurchasing={isPurchasing}

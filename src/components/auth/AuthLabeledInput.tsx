@@ -4,11 +4,13 @@ import { AUTH } from "./authTheme";
 type Props = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   error?: string;
+  hint?: string;
 };
 
 export default function AuthLabeledInput({
   label,
   error,
+  hint,
   className = "",
   id,
   ...rest
@@ -34,6 +36,11 @@ export default function AuthLabeledInput({
         aria-invalid={err}
         {...rest}
       />
+      {hint && !error ? (
+        <p className="mt-1.5 text-xs leading-relaxed" style={{ color: AUTH.label }}>
+          {hint}
+        </p>
+      ) : null}
       {error ? (
         <p className="text-sm mt-1" style={{ color: AUTH.error }}>
           {error}
