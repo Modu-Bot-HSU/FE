@@ -25,12 +25,12 @@ export default function HomeSidebar({ open, onClose }: Props) {
   return (
     <>
       <div
-        className={`absolute inset-0 z-40 bg-black/20 transition-opacity ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
+        className={`absolute inset-0 z-[91] bg-black/20 transition-opacity ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
         onClick={onClose}
         aria-hidden={!open}
       />
       <aside
-        className={`absolute left-0 top-0 z-50 h-full w-[86vw] max-w-[340px] bg-[#F5F5F5] px-6 py-8 shadow-xl transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`absolute left-0 top-0 z-[92] h-full w-[86vw] max-w-[340px] bg-[#F5F5F5] px-6 py-8 shadow-xl transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"}`}
         aria-hidden={!open}
       >
         <div className="mb-8">

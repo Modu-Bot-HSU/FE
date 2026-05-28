@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { formatCountdown } from "./signUpHelpers";
-import { runConnectMetaMask, runSignUpComplete } from "./signUpWalletActions";
+import {
+  runConnectMetaMask,
+  runSignUpComplete,
+  type SignUpCompleteProfile,
+} from "./signUpWalletActions";
 import { runSendUniversityCode, runVerifyEmailCode } from "./signUpEmailActions";
 import { useSignUpMutations } from "./useSignUpMutations";
 
@@ -46,7 +50,7 @@ export const useSignUp = () => {
   const handleVerifyCode = () =>
     runVerifyEmailCode(email, code, remainingSeconds, signupWalletAddress, verifyCodeMutation);
 
-  const handleComplete = () =>
+  const handleComplete = (): Promise<SignUpCompleteProfile | null> =>
     runSignUpComplete(email, name, walletAddress, setWalletAddress, signupMutation);
 
   const connectMetaMaskToForm = () => runConnectMetaMask(setWalletAddress);

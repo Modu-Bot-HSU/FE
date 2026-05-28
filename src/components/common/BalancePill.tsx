@@ -1,14 +1,16 @@
 type BalancePillProps = {
-  text: string;
+  balance: number | string;
   className?: string;
 };
 
-export default function BalancePill({ text, className = "" }: BalancePillProps) {
+export default function BalancePill({ balance, className = "" }: BalancePillProps) {
   return (
     <div
-      className={`w-fit rounded-full border border-slate-300 bg-white/95 px-4 py-1 text-sm text-slate-700 shadow ${className}`}
+      className={`flex w-fit h-7 items-center justify-end gap-1.5 rounded-full border-[0.5px] border-[#A8A29F] bg-[#F5F5F4] px-3.5 py-0 ${className}`}
     >
-      {text}
+      <span className="text-xs font-medium text-[#A8A29F]">Balance</span>
+      <span className="text-xs font-medium text-black">{balance}</span>
+      <span className="text-xs font-medium text-black">tokens</span>
     </div>
   );
 }
