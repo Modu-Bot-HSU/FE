@@ -47,7 +47,7 @@ export type KnowledgeListParams = {
 export type KnowledgeSubmitBody = {
   category: KnowledgeCategory;
   content: string;
-  originalQuestion?: string;
+  questionId: string;
 };
 
 export type KnowledgeMutationResponse = {
@@ -58,7 +58,7 @@ export type KnowledgeMutationResponse = {
 export type KnowledgeUpdateBody = {
   category: KnowledgeCategory;
   content: string;
-  originalQuestion?: string;
+  questionId: string;
 };
 
 export type KnowledgeDeleteBody = {
@@ -84,4 +84,8 @@ export type KnowledgeSubmissionItem = {
   approvedAt: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type KnowledgeSubmissionListParams = {
+  status?: KnowledgeSubmissionStatus;
 };
