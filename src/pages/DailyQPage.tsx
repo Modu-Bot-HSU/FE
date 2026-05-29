@@ -1,26 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { fetchMyKnowledgeSubmissions, submitKnowledge } from "../apis/knowledge/knowledge";
-import type { KnowledgeSubmissionItem, KnowledgeSubmissionStatus } from "../apis/knowledge/types";
+import { useNavigate } from "react-router-dom";
+import { submitKnowledge } from "../apis/knowledge/knowledge";
 import { fetchNextQuestion, type QuestionItem } from "../apis/questions/questions";
 
-type Step = "swipe" | "write" | "submit" | "submitted" | "history";
-
-const statusColor: Record<KnowledgeSubmissionStatus, string> = {
-  APPROVED: "text-emerald-600 bg-emerald-50",
-  PENDING: "text-amber-600 bg-amber-50",
-  REJECTED: "text-rose-600 bg-rose-50",
-};
+type Step = "swipe" | "write" | "submit" | "submitted";
 
 const primaryBtn = "w-full rounded-xl bg-[#FF5C00] py-3 text-center text-sm font-semibold text-white";
 const secondaryBtn =
   "w-full rounded-xl border border-gray-300 bg-white py-3 text-center text-sm font-semibold text-gray-700";
 
 export default function DailyQPage() {
+  const navigate = useNavigate();
   const [step, setStep] = useState<Step>("swipe");
   const [answer, setAnswer] = useState("");
   const [question, setQuestion] = useState<QuestionItem | null>(null);
   const [remaining, setRemaining] = useState(0);
-  const [history, setHistory] = useState<KnowledgeSubmissionItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,22 +36,8 @@ export default function DailyQPage() {
     }
   };
 
-  const loadHistory = async (status?: KnowledgeSubmissionStatus) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const items = await fetchMyKnowledgeSubmissions(status ? { status } : {});
-      setHistory(items);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "제출 기록을 불러오지 못했습니다.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     void loadQuestion();
-    void loadHistory();
   }, []);
 
   const handleSubmit = async () => {
@@ -72,7 +52,7 @@ export default function DailyQPage() {
       });
       setStep("submitted");
       setAnswer("");
-      await Promise.all([loadQuestion(), loadHistory()]);
+      await loadQuestion();
     } catch (e) {
       setError(e instanceof Error ? e.message : "제출 중 오류가 발생했습니다.");
     } finally {
@@ -136,7 +116,7 @@ export default function DailyQPage() {
                     <button
                       type="button"
                       className="w-full text-center text-sm font-medium text-gray-500"
-                      onClick={() => setStep("history")}
+                      onClick={() => setStep("swipe")}
                     >
                       Go back to questions
                     </button>
@@ -176,7 +156,7 @@ export default function DailyQPage() {
             Admin will review your answer. Credits will be added once approved.
           </p>
           <div className="mt-10 w-full max-w-sm space-y-2">
-            <button type="button" className={primaryBtn} onClick={() => setStep("history")}>
+            <button type="button" className={primaryBtn} onClick={() => navigate("/daily-q/history")}>
               View answer history
             </button>
             <button
@@ -193,56 +173,7 @@ export default function DailyQPage() {
         </section>
       )}
 
-      {step === "history" && (
-        <section className="min-h-[78vh]">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-4xl font-semibold text-[#0f263a]">Daily Q History</h2>
-            <button type="button" className={secondaryBtn} onClick={() => setStep("swipe")}>
-              Back
-            </button>
-          </div>
-          <div className="mb-3 flex gap-2">
-            <button type="button" className={secondaryBtn} onClick={() => void loadHistory()}>
-              ALL
-            </button>
-            <button type="button" className={secondaryBtn} onClick={() => void loadHistory("PENDING")}>
-              PENDING
-            </button>
-            <button type="button" className={secondaryBtn} onClick={() => void loadHistory("APPROVED")}>
-              APPROVED
-            </button>
-            <button type="button" className={secondaryBtn} onClick={() => void loadHistory("REJECTED")}>
-              REJECTED
-            </button>
-          </div>
-          <div className="space-y-3">
-            {history.map((item) => (
-              <article key={item.id} className="rounded-xl border border-gray-200 bg-white p-3">
-                <div className="mb-1 flex items-start justify-between gap-3">
-                  <p className="text-xs font-semibold text-slate-700">
-                    {item.originalQuestion ?? "질문 텍스트 없음"}
-                  </p>
-                  <span
-                    className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-semibold ${
-                      statusColor[item.status]
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                </div>
-                <p className="text-xs leading-relaxed text-gray-500">{item.content}</p>
-                <div className="mt-2 flex items-center justify-between text-[11px] text-gray-400">
-                  <span>{new Date(item.createdAt).toLocaleString()}</span>
-                  <span>{item.type}</span>
-                </div>
-              </article>
-            ))}
-            {!isLoading && history.length === 0 ? (
-              <p className="py-10 text-center text-sm text-gray-500">제출 기록이 없습니다.</p>
-            ) : null}
-          </div>
-        </section>
-      )}
+
     </main>
   );
 }

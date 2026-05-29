@@ -5,25 +5,31 @@ import {
   getNftGoods,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
-import { fetchMySubmissions } from "../../apis/knowledge/knowledge";
+import { fetchMyKnowledgeSubmissions } from "../../apis/knowledge/knowledge";
 import { useAuthStore } from "../../store/useAuthStore";
 import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
 import NftGridSection from "../../components/shop/NftGridSection";
 import BuildingDetailModal from "../../components/map/BuildingDetailModal";
-import { fetchMyKnowledgeSubmissions } from "../../apis/knowledge/knowledge";
 import { countCreateSubmissionStats } from "../../features/knowledge/knowledgeSubmissionStats";
 
-type ProfileDailyQData = {
+type ProfileDailyQStats = {
+  received: number;
+  pending: number;
+  notCredited: number;
+};
+
+type ProfileMockData = {
   walletType: string;
 };
 
-const defaultDailyQ: ProfileDailyQData = {
+const profileMock: ProfileMockData = {
   walletType: "MetaMask",
-  dailyQ: {
-    received: 0,
-    pending: 0,
-    notCredited: 0,
-  },
+};
+
+const defaultDailyQStats: ProfileDailyQStats = {
+  received: 0,
+  pending: 0,
+  notCredited: 0,
 };
 
 
@@ -34,7 +40,8 @@ export default function ProfilePage() {
   const [balance, setBalance] = useState("12");
   const [ownedNfts, setOwnedNfts] = useState<NftGoodsItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<NftGoodsItem | null>(null);
-  const [dailyQStats, setDailyQStats] = useState(defaultDailyQ.dailyQ);
+  const [loading, setLoading] = useState(true);
+  const [submissionStats, setSubmissionStats] = useState<ProfileDailyQStats>(defaultDailyQStats);
 
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
@@ -43,7 +50,7 @@ export default function ProfilePage() {
     Promise.allSettled([
       getHsBalance(accessToken),
       getNftGoods(accessToken),
-      fetchMySubmissions(),
+      fetchMyKnowledgeSubmissions(),
     ])
       .then(([balanceResult, goodsResult, submissionsResult]) => {
         if (balanceResult.status === "fulfilled") {
@@ -63,39 +70,30 @@ export default function ProfilePage() {
 
         if (submissionsResult.status === "fulfilled") {
           console.log("[ProfilePage] submissions:", submissionsResult.value);
-          const received = submissionsResult.value.filter((item) => item.status === "APPROVED").length;
-          const pending = submissionsResult.value.filter((item) => item.status === "PENDING").length;
-          const notCredited = submissionsResult.value.filter((item) => item.status === "REJECTED").length;
-          setSubmissionStats({ received, pending, notCredited });
+          setSubmissionStats(countCreateSubmissionStats(submissionsResult.value));
         } else {
           console.warn("[ProfilePage] submissions fetch failed:", submissionsResult.reason);
-          setSubmissionStats({ received: 0, pending: 0, notCredited: 0 });
+          setSubmissionStats(defaultDailyQStats);
         }
       })
       .catch(() => {
         setOwnedNfts([]);
-        setSubmissionStats({ received: 0, pending: 0, notCredited: 0 });
+        setSubmissionStats(defaultDailyQStats);
       })
       .finally(() => {
         setLoading(false);
       });
   }, [accessToken]);
 
-  useEffect(() => {
-    fetchMyKnowledgeSubmissions()
-      .then((items) => setDailyQStats(countCreateSubmissionStats(items)))
-      .catch(() => setDailyQStats(defaultDailyQ.dailyQ));
-  }, []);
-
   const profile = useMemo(
     () => ({
       name: tempUser?.name || "Sean Kim",
       email: tempUser?.email || "sean@university.edu",
       walletAddress: tempUser?.walletAddress || "0x4a3b...f3b1",
-      walletType: defaultDailyQ.walletType,
-      dailyQ: dailyQStats,
+      walletType: profileMock.walletType,
+      dailyQ: submissionStats,
     }),
-    [dailyQStats, tempUser],
+    [submissionStats, tempUser],
   );
 
   const myBuildings = ownedNfts.length > 0 ? ownedNfts : [];
@@ -137,23 +135,28 @@ export default function ProfilePage() {
       <section className="mt-6 border-t border-[#dfdfdf] pt-4">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-[12px] font-bold tracking-wide text-[#78716D]">DAILY Q HISTORY</h2>
-          {/* daily q history로 이동 */}
-          <button type="button" onClick={() => navigate("/daily-q")} className="text-xl font-semibold text-[#10314f]">View History →</button>
+          <button
+            type="button"
+            onClick={() => navigate("/daily-q/history")}
+            className="text-[12px] font-medium text-[#10314f]"
+          >
+            View History →
+          </button>
         </div>
 
         <div className="flex rounded-xl border border-[#c9c9c9] bg-[#f4f4f4]">
           <div className="flex-1 py-3 text-center">
-            <p className="text-[24px] font-bold leading-none text-[#2D7A2D]">{submissionStats.received}</p>
+            <p className="text-[24px] font-bold leading-none text-[#2D7A2D]">{profile.dailyQ.received}</p>
             <p className="mt-1 text-[12px] text-[#2D7A2D]">Received</p>
           </div>
           <div className="my-3 w-px bg-[#d5d5d5]" />
           <div className="flex-1 py-3 text-center">
-            <p className="text-[24px] font-bold leading-none text-[#B35900]">{submissionStats.pending}</p>
+            <p className="text-[24px] font-bold leading-none text-[#B35900]">{profile.dailyQ.pending}</p>
             <p className="mt-1 text-[12px] text-[#B35900]">Pending</p>
           </div>
           <div className="my-3 w-px bg-[#d5d5d5]" />
           <div className="flex-1 py-3 text-center">
-            <p className="text-[24px] font-bold leading-none text-[#C0392B]">{submissionStats.notCredited}</p>
+            <p className="text-[24px] font-bold leading-none text-[#C0392B]">{profile.dailyQ.notCredited}</p>
             <p className="mt-1 text-[12px] text-[#C0392B]">Not Credited</p>
           </div>
         </div>
