@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  getHsBalance,
-  getNftGoods,
+  getMyPage,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
 import { fetchMyKnowledgeSubmissions } from "../../apis/knowledge/knowledge";
+import { clearAuthTokens } from "../../apis/auth/auth";
 import { useAuthStore } from "../../store/useAuthStore";
 import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
 import NftGridSection from "../../components/shop/NftGridSection";
@@ -16,14 +16,6 @@ type ProfileDailyQStats = {
   received: number;
   pending: number;
   notCredited: number;
-};
-
-type ProfileMockData = {
-  walletType: string;
-};
-
-const profileMock: ProfileMockData = {
-  walletType: "MetaMask",
 };
 
 const defaultDailyQStats: ProfileDailyQStats = {
@@ -37,9 +29,12 @@ const defaultDailyQStats: ProfileDailyQStats = {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const tempUser = useAuthStore((state) => state.tempUser);
-  const [balance, setBalance] = useState("12");
+  const [balance, setBalance] = useState("");
+  const [email, setEmail] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
   const [ownedNfts, setOwnedNfts] = useState<NftGoodsItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<NftGoodsItem | null>(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submissionStats, setSubmissionStats] = useState<ProfileDailyQStats>(defaultDailyQStats);
 
@@ -48,23 +43,26 @@ export default function ProfilePage() {
   useEffect(() => {
     setLoading(true);
     Promise.allSettled([
-      getHsBalance(accessToken),
-      getNftGoods(accessToken),
+      getMyPage(accessToken),
       fetchMyKnowledgeSubmissions(),
     ])
-      .then(([balanceResult, goodsResult, submissionsResult]) => {
-        if (balanceResult.status === "fulfilled") {
-          console.log("[ProfilePage] balance:", balanceResult.value);
-          setBalance(balanceResult.value.balance);
+      .then(([myPageResult, submissionsResult]) => {
+        if (myPageResult.status === "fulfilled") {
+          const myPage = myPageResult.value;
+          console.log("[ProfilePage] mypage:", myPage);
+          setBalance(myPage.hsTokenBalance);
+          setEmail(myPage.email);
+          setWalletAddress(myPage.walletAddress);
+          setOwnedNfts(
+            myPage.nfts.map((n) => ({
+              ...n,
+              isSold: true,
+              owner: myPage.walletAddress,
+              txHash: n.txHash ?? null,
+            })),
+          );
         } else {
-          console.warn("[ProfilePage] balance fetch failed:", balanceResult.reason);
-        }
-
-        if (goodsResult.status === "fulfilled") {
-          console.log("[ProfilePage] nftGoods:", goodsResult.value);
-          setOwnedNfts(goodsResult.value.filter((item) => item.isSold));
-        } else {
-          console.warn("[ProfilePage] nftGoods fetch failed:", goodsResult.reason);
+          console.warn("[ProfilePage] mypage fetch failed:", myPageResult.reason);
           setOwnedNfts([]);
         }
 
@@ -87,13 +85,12 @@ export default function ProfilePage() {
 
   const profile = useMemo(
     () => ({
-      name: tempUser?.name || "Sean Kim",
-      email: tempUser?.email || "sean@university.edu",
-      walletAddress: tempUser?.walletAddress || "0x4a3b...f3b1",
-      walletType: profileMock.walletType,
+      name: tempUser?.name ?? "",
+      email: email || tempUser?.email || "",
+      walletAddress: walletAddress || tempUser?.walletAddress || "",
       dailyQ: submissionStats,
     }),
-    [submissionStats, tempUser],
+    [email, walletAddress, submissionStats, tempUser],
   );
 
   const myBuildings = ownedNfts.length > 0 ? ownedNfts : [];
@@ -193,12 +190,52 @@ export default function ProfilePage() {
             <p className="font-medium text-[#002A47]">Wallet</p>
             <p className="truncate text-right text-[#78716D]">{profile.walletAddress}</p>
           </div>
-          <div className="grid grid-cols-[120px_1fr] border-b border-[#D6D3D1] px-4 py-3 text-[14px]">
-            <p className="font-medium text-[#002A47]">Wallet Type</p>
-            <p className="truncate text-right text-[#78716D]">{profile.walletType}</p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowLogoutModal(true)}
+          className="mt-4 w-full rounded-xl border border-[#C0392B] py-3 text-[14px] font-medium text-[#C0392B] active:bg-rose-50"
+        >
+          로그아웃
+        </button>
+      </section>
+
+      {/* 로그아웃 확인 모달 */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowLogoutModal(false)}
+          />
+          <div className="relative w-full max-w-[430px] rounded-t-3xl bg-white px-5 pt-6 pb-10 shadow-xl">
+            <div className="mb-4 text-center">
+              <p className="text-[17px] font-semibold text-[#002A47]">로그아웃 하시겠어요?</p>
+              <p className="mt-1.5 text-[13px] text-[#78716D]">로그인 페이지로 이동합니다.</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 rounded-xl border border-[#D6D3D1] bg-[#f4f4f4] py-3 text-[14px] font-medium text-[#44403D]"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  clearAuthTokens();
+                  navigate("/auth/login", { replace: true });
+                }}
+                className="flex-1 rounded-xl bg-[#C0392B] py-3 text-[14px] font-medium text-white"
+              >
+                로그아웃
+              </button>
+            </div>
           </div>
         </div>
-      </section>
+      )}
     </div>
   );
 }
