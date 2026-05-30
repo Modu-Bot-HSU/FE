@@ -42,7 +42,14 @@ export default function ProfilePage() {
           setEmail(p.email);
           setWalletAddress(p.walletAddress);
           setOwnedNfts(
-            p.nfts.map((n) => ({ ...n, isSold: true, owner: p.walletAddress, txHash: n.txHash ?? null })),
+            Array.isArray(p.nfts)
+              ? p.nfts.map((n) => ({
+                  ...n,
+                  isSold: true,
+                  owner: p.walletAddress,
+                  txHash: n.txHash ?? null,
+                }))
+              : [],
           );
         } else {
           console.warn("[ProfilePage] mypage fetch failed:", myPageResult.reason);
@@ -50,7 +57,11 @@ export default function ProfilePage() {
 
         if (submissionsResult.status === "fulfilled") {
           console.log("[ProfilePage] submissions:", submissionsResult.value);
-          setDailyQStats(countCreateSubmissionStats(submissionsResult.value));
+          setDailyQStats(
+            countCreateSubmissionStats(
+              Array.isArray(submissionsResult.value) ? submissionsResult.value : [],
+            ),
+          );
         } else {
           console.warn("[ProfilePage] submissions fetch failed:", submissionsResult.reason);
         }
