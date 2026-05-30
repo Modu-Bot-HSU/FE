@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  ensureNftPurchaseApproval,
   getHsBalance,
   getNftGoods,
   purchaseNft,
@@ -50,14 +51,27 @@ export default function ShopPage() {
     setMessage(null);
 
     try {
+      await ensureNftPurchaseApproval(selectedItem.price);
       await purchaseNft({ index: selectedItem.index }, accessToken);
       setMessage({ ok: true, text: "구매 요청이 완료되었습니다." });
       await fetchShopData();
     } catch (err) {
+      const walletCode =
+        typeof err === "object" && err !== null && "code" in err
+          ? (err as { code?: number | string }).code
+          : undefined;
+
+      if (walletCode === 4001 || walletCode === "4001") {
+        setMessage({ ok: false, text: "MetaMask 서명을 취소했습니다." });
+        return;
+      }
+
       const msg =
         err instanceof AxiosError
           ? (err.response?.data as { message?: string })?.message ?? err.message
-          : "구매 중 오류가 발생했습니다.";
+          : err instanceof Error
+            ? err.message
+            : "구매 중 오류가 발생했습니다.";
       setMessage({ ok: false, text: msg });
     } finally {
       setPurchasing(false);

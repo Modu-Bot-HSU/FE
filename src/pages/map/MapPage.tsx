@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  ensureNftPurchaseApproval,
   getHsBalance,
   getNftGoods,
   purchaseNft,
@@ -82,10 +83,21 @@ export default function MapPage() {
     setPurchaseMessage(null);
 
     try {
+      await ensureNftPurchaseApproval(selectedItem.price);
       await purchaseNft({ index: selectedItem.index }, accessToken);
       setPurchaseMessage("구매 요청이 완료되었습니다.");
       await fetchMapData();
     } catch (error) {
+      const walletCode =
+        typeof error === "object" && error !== null && "code" in error
+          ? (error as { code?: number | string }).code
+          : undefined;
+
+      if (walletCode === 4001 || walletCode === "4001") {
+        setPurchaseMessage("MetaMask 서명을 취소했습니다.");
+        return;
+      }
+
       if (error instanceof Error && error.message) {
         setPurchaseMessage(error.message);
       } else {
