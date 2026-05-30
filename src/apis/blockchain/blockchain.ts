@@ -1,4 +1,5 @@
 import { axiosInstance } from "../axios";
+import { BrowserProvider, Contract, parseUnits } from "ethers";
 
 export interface NftGoodsItem {
   index: number;
@@ -29,6 +30,29 @@ export interface HsBalanceResponse {
 
 export type ApiObjectResponse = Record<string, unknown>;
 
+const HS_TOKEN_ADDRESS = import.meta.env.VITE_HS_TOKEN_ADDRESS;
+const HS_NFT_ADDRESS = import.meta.env.VITE_HS_NFT_ADDRESS;
+const POLYGON_AMOY_CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID ?? "80002");
+const HS_TOKEN_DECIMALS = Number(import.meta.env.VITE_HS_TOKEN_DECIMALS ?? "18");
+
+const HS_TOKEN_ABI = [
+  "function approve(address spender, uint256 value) returns (bool)",
+];
+
+const toChainHex = (chainId: number) => `0x${chainId.toString(16)}`;
+
+const POLYGON_AMOY_PARAMS = {
+  chainId: toChainHex(POLYGON_AMOY_CHAIN_ID),
+  chainName: "Polygon Amoy Testnet",
+  nativeCurrency: {
+    name: "POL",
+    symbol: "POL",
+    decimals: 18,
+  },
+  rpcUrls: ["https://rpc-amoy.polygon.technology"],
+  blockExplorerUrls: ["https://amoy.polygonscan.com"],
+};
+
 const createAuthConfig = (accessToken?: string) => {
   const token = accessToken?.trim();
   if (!token) return undefined;
@@ -38,6 +62,51 @@ const createAuthConfig = (accessToken?: string) => {
       Authorization: `Bearer ${token}`,
     },
   };
+};
+
+export const ensureNftPurchaseApproval = async (
+  requiredAmount: string | number,
+): Promise<void> => {
+  if (!window.ethereum) {
+    throw new Error("MetaMask를 설치해주세요.");
+  }
+
+  if (!HS_TOKEN_ADDRESS || !HS_NFT_ADDRESS) {
+    throw new Error("환경변수(VITE_HS_TOKEN_ADDRESS, VITE_HS_NFT_ADDRESS)를 설정해주세요.");
+  }
+
+  await window.ethereum.request({ method: "eth_requestAccounts" });
+
+  const currentChainHex = (await window.ethereum.request({ method: "eth_chainId" })) as string;
+  if (Number.parseInt(currentChainHex, 16) !== POLYGON_AMOY_CHAIN_ID) {
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: toChainHex(POLYGON_AMOY_CHAIN_ID) }],
+      });
+    } catch (error) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? (error as { code?: number | string }).code
+          : undefined;
+
+      if (code === 4902 || code === "4902") {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [POLYGON_AMOY_PARAMS],
+        });
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  const provider = new BrowserProvider(window.ethereum);
+  const signer = await provider.getSigner();
+  const tokenContract = new Contract(HS_TOKEN_ADDRESS, HS_TOKEN_ABI, signer);
+  const requiredAllowance = parseUnits(String(requiredAmount), HS_TOKEN_DECIMALS);
+  const approveTx = await tokenContract.approve(HS_NFT_ADDRESS, requiredAllowance);
+  await approveTx.wait();
 };
 
 const MOCK_NFT_GOODS: NftGoodsItem[] = [
