@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchMySubmissions } from "../../apis/knowledge/knowledge";
+import { fetchMyKnowledgeSubmissions } from "../../apis/knowledge/knowledge";
 import type { KnowledgeSubmissionItem, KnowledgeSubmissionStatus } from "../../apis/knowledge/types";
 import { KNOWLEDGE_CATEGORY_LABELS } from "../../apis/knowledge/types";
 import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
@@ -33,7 +33,7 @@ export default function DailyQHistoryPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetchMySubmissions()
+    fetchMyKnowledgeSubmissions()
       .then(setItems)
       .catch(() => setItems([]))
       .finally(() => setLoading(false));

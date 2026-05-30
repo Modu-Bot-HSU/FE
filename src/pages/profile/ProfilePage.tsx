@@ -1,168 +1,83 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  getHsBalance,
-  getNftGoods,
-  type NftGoodsItem,
-} from "../../apis/blockchain/blockchain";
-import { fetchMySubmissions } from "../../apis/knowledge/knowledge";
+import { getMyPage, type NftGoodsItem } from "../../apis/blockchain/blockchain";
+import { fetchMyKnowledgeSubmissions } from "../../apis/knowledge/knowledge";
+import { clearAuthTokens } from "../../apis/auth/auth";
 import { useAuthStore } from "../../store/useAuthStore";
+import { countCreateSubmissionStats } from "../../features/knowledge/knowledgeSubmissionStats";
 import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
 import NftGridSection from "../../components/shop/NftGridSection";
 import BuildingDetailModal from "../../components/map/BuildingDetailModal";
-import { fetchMyKnowledgeSubmissions } from "../../apis/knowledge/knowledge";
-import { countCreateSubmissionStats } from "../../features/knowledge/knowledgeSubmissionStats";
+import ProfileHeader from "./components/ProfileHeader";
+import DailyQStatsSection from "./components/DailyQStatsSection";
+import AccountSection from "./components/AccountSection";
+import LogoutModal from "./components/LogoutModal";
 
-type ProfileDailyQData = {
-  walletType: string;
-};
+type DailyQStats = { received: number; pending: number; notCredited: number };
 
-const defaultDailyQ: ProfileDailyQData = {
-  walletType: "MetaMask",
-  dailyQ: {
-    received: 0,
-    pending: 0,
-    notCredited: 0,
-  },
-};
-
-
+const DEFAULT_STATS: DailyQStats = { received: 0, pending: 0, notCredited: 0 };
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const tempUser = useAuthStore((state) => state.tempUser);
-  const [balance, setBalance] = useState("12");
+  const accessToken = localStorage.getItem("accessToken") ?? undefined;
+
+  const [balance, setBalance] = useState("");
+  const [email, setEmail] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
   const [ownedNfts, setOwnedNfts] = useState<NftGoodsItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<NftGoodsItem | null>(null);
-  const [dailyQStats, setDailyQStats] = useState(defaultDailyQ.dailyQ);
-
-  const accessToken = localStorage.getItem("accessToken") ?? undefined;
+  const [dailyQStats, setDailyQStats] = useState<DailyQStats>(DEFAULT_STATS);
+  const [loading, setLoading] = useState(true);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    Promise.allSettled([
-      getHsBalance(accessToken),
-      getNftGoods(accessToken),
-      fetchMySubmissions(),
-    ])
-      .then(([balanceResult, goodsResult, submissionsResult]) => {
-        if (balanceResult.status === "fulfilled") {
-          console.log("[ProfilePage] balance:", balanceResult.value);
-          setBalance(balanceResult.value.balance);
+    Promise.allSettled([getMyPage(accessToken), fetchMyKnowledgeSubmissions()])
+      .then(([myPageResult, submissionsResult]) => {
+        if (myPageResult.status === "fulfilled") {
+          const p = myPageResult.value;
+          console.log("[ProfilePage] mypage:", p);
+          setBalance(p.hsTokenBalance);
+          setEmail(p.email);
+          setWalletAddress(p.walletAddress);
+          setOwnedNfts(
+            p.nfts.map((n) => ({ ...n, isSold: true, owner: p.walletAddress, txHash: n.txHash ?? null })),
+          );
         } else {
-          console.warn("[ProfilePage] balance fetch failed:", balanceResult.reason);
-        }
-
-        if (goodsResult.status === "fulfilled") {
-          console.log("[ProfilePage] nftGoods:", goodsResult.value);
-          setOwnedNfts(goodsResult.value.filter((item) => item.isSold));
-        } else {
-          console.warn("[ProfilePage] nftGoods fetch failed:", goodsResult.reason);
-          setOwnedNfts([]);
+          console.warn("[ProfilePage] mypage fetch failed:", myPageResult.reason);
         }
 
         if (submissionsResult.status === "fulfilled") {
           console.log("[ProfilePage] submissions:", submissionsResult.value);
-          const received = submissionsResult.value.filter((item) => item.status === "APPROVED").length;
-          const pending = submissionsResult.value.filter((item) => item.status === "PENDING").length;
-          const notCredited = submissionsResult.value.filter((item) => item.status === "REJECTED").length;
-          setSubmissionStats({ received, pending, notCredited });
+          setDailyQStats(countCreateSubmissionStats(submissionsResult.value));
         } else {
           console.warn("[ProfilePage] submissions fetch failed:", submissionsResult.reason);
-          setSubmissionStats({ received: 0, pending: 0, notCredited: 0 });
         }
       })
-      .catch(() => {
-        setOwnedNfts([]);
-        setSubmissionStats({ received: 0, pending: 0, notCredited: 0 });
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   }, [accessToken]);
 
-  useEffect(() => {
-    fetchMyKnowledgeSubmissions()
-      .then((items) => setDailyQStats(countCreateSubmissionStats(items)))
-      .catch(() => setDailyQStats(defaultDailyQ.dailyQ));
-  }, []);
-
-  const profile = useMemo(
-    () => ({
-      name: tempUser?.name || "Sean Kim",
-      email: tempUser?.email || "sean@university.edu",
-      walletAddress: tempUser?.walletAddress || "0x4a3b...f3b1",
-      walletType: defaultDailyQ.walletType,
-      dailyQ: dailyQStats,
-    }),
-    [dailyQStats, tempUser],
-  );
-
-  const myBuildings = ownedNfts.length > 0 ? ownedNfts : [];
-
-  const initials = profile.name
-    .split(" ")
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const handleLogout = () => {
+    clearAuthTokens();
+    navigate("/auth/login", { replace: true });
+  };
 
   return (
     <div className={`relative min-h-full bg-[#f3f3f3] px-4 pb-6 ${SIDEBAR_BUTTON_SAFE_TOP_CLASS}`}>
-      
-      <section className="mt-6">
-        <div className="flex items-center gap-4">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-[0.5px] border-[#A8A29F] bg-[#D6D3D1] text-[34px] font-bold text-[#A8A29F]">
-            {initials}
-          </div>
+      <ProfileHeader
+        name={tempUser?.name ?? ""}
+        email={email || tempUser?.email || ""}
+        balance={balance}
+        buildingCount={ownedNfts.length}
+      />
 
-          <div>
-            <h1 className="text-[28px] font-semibold leading-none text-[#002A47]">{profile.name}</h1>
-            <p className="mt-2 text-[14px] text-[#A8A29F]">{profile.email}</p>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-2 gap-2">
-          <div className="rounded-xl border border-[#c9c9c9] bg-[#f4f4f4] px-3 py-3 text-center">
-            <p className="text-[24px] font-semibold leading-none text-[#002A47]">{balance}</p>
-            <p className="mt-1 text-[12px] text-[#78716D]">Tokens Balance</p>
-          </div>
-          <div className="rounded-xl border border-[#c9c9c9] bg-[#f4f4f4] px-3 py-3 text-center">
-            <p className="text-[24px] font-semibold leading-none text-[#002A47]">{myBuildings.length}</p>
-            <p className="mt-1 text-[12px] text-[#78716D]">My Buildings</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mt-6 border-t border-[#dfdfdf] pt-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-[12px] font-bold tracking-wide text-[#78716D]">DAILY Q HISTORY</h2>
-          {/* daily q history로 이동 */}
-          <button type="button" onClick={() => navigate("/daily-q")} className="text-xl font-semibold text-[#10314f]">View History →</button>
-        </div>
-
-        <div className="flex rounded-xl border border-[#c9c9c9] bg-[#f4f4f4]">
-          <div className="flex-1 py-3 text-center">
-            <p className="text-[24px] font-bold leading-none text-[#2D7A2D]">{submissionStats.received}</p>
-            <p className="mt-1 text-[12px] text-[#2D7A2D]">Received</p>
-          </div>
-          <div className="my-3 w-px bg-[#d5d5d5]" />
-          <div className="flex-1 py-3 text-center">
-            <p className="text-[24px] font-bold leading-none text-[#B35900]">{submissionStats.pending}</p>
-            <p className="mt-1 text-[12px] text-[#B35900]">Pending</p>
-          </div>
-          <div className="my-3 w-px bg-[#d5d5d5]" />
-          <div className="flex-1 py-3 text-center">
-            <p className="text-[24px] font-bold leading-none text-[#C0392B]">{submissionStats.notCredited}</p>
-            <p className="mt-1 text-[12px] text-[#C0392B]">Not Credited</p>
-          </div>
-        </div>
-      </section>
+      <DailyQStatsSection stats={dailyQStats} />
 
       <section className="mt-6 border-t border-[#dfdfdf] pt-4">
         <NftGridSection
           title="MY BUILDINGS"
-          items={myBuildings.filter((g) => g.isSold)}
+          items={ownedNfts}
           onItemClick={setSelectedItem}
           badgeText="Owned"
           emptyMessage="소유한 건물이 없습니다."
@@ -179,23 +94,15 @@ export default function ProfilePage() {
         closeLabel="profile"
       />
 
-      <section className="mt-6 border-t border-[#dfdfdf] pt-4">
-        <h2 className="mb-3 text-[12px] font-bold tracking-wide text-[#78716D]">ACCOUNT</h2>
-        <div className="overflow-hidden rounded-xl border border-[#A8A29F] bg-[#f4f4f4]">
-          <div className="grid grid-cols-[120px_1fr] border-[0.5px] border-[#d7d7d7] px-4 py-3 text-[14px]">
-            <p className="font-medium text-[#002A47]">Email</p>
-            <p className="truncate text-right text-[#78716D]">{profile.email}</p>
-          </div>
-          <div className="grid grid-cols-[120px_1fr] border-b border-[#D6D3D1] px-4 py-3 text-[14px]">
-            <p className="font-medium text-[#002A47]">Wallet</p>
-            <p className="truncate text-right text-[#78716D]">{profile.walletAddress}</p>
-          </div>
-          <div className="grid grid-cols-[120px_1fr] border-b border-[#D6D3D1] px-4 py-3 text-[14px]">
-            <p className="font-medium text-[#002A47]">Wallet Type</p>
-            <p className="truncate text-right text-[#78716D]">{profile.walletType}</p>
-          </div>
-        </div>
-      </section>
+      <AccountSection
+        email={email || tempUser?.email || ""}
+        walletAddress={walletAddress || tempUser?.walletAddress || ""}
+        onLogout={() => setShowLogoutModal(true)}
+      />
+
+      {showLogoutModal && (
+        <LogoutModal onCancel={() => setShowLogoutModal(false)} onConfirm={handleLogout} />
+      )}
     </div>
   );
 }

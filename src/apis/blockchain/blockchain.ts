@@ -164,7 +164,33 @@ const MOCK_NFT_GOODS: NftGoodsItem[] = [
   },
 ];
 
-const USE_MOCK = true;
+const USE_MOCK = false;
+
+export interface MyPageNftItem {
+  index: number;
+  name: string;
+  description: string;
+  price: string;
+  imageUrl: string;
+  metadataUrl: string;
+  txHash: string;
+}
+
+export interface MyPageResponse {
+  email: string;
+  walletAddress: string;
+  hsTokenBalance: string;
+  nftCount: number;
+  nfts: MyPageNftItem[];
+}
+
+export const getMyPage = async (accessToken?: string): Promise<MyPageResponse> => {
+  const { data } = await axiosInstance.get<MyPageResponse>(
+    "/users/mypage",
+    createAuthConfig(accessToken),
+  );
+  return data;
+};
 
 export const getNftGoods = async (accessToken?: string): Promise<NftGoodsItem[]> => {
   if (USE_MOCK) {

@@ -2,11 +2,9 @@ import { API_BASE_URL, getBearerAuthHeaders, parseApiResponse } from "../httpCli
 import type {
   KnowledgeDeleteBody,
   KnowledgeSubmissionItem,
-  KnowledgeSubmissionStatus,
   KnowledgeListParams,
   KnowledgeListResponse,
   KnowledgeMutationResponse,
-  KnowledgeSubmissionItem,
   KnowledgeSubmissionListParams,
   KnowledgeSubmitBody,
   KnowledgeUpdateBody,
@@ -90,4 +88,9 @@ export async function fetchMyKnowledgeSubmissions(
     },
   );
   return parseApiResponse<KnowledgeSubmissionItem[]>(response);
+}
+
+/** @deprecated use fetchMyKnowledgeSubmissions */
+export async function fetchMySubmissions(): Promise<KnowledgeSubmissionItem[]> {
+  return fetchMyKnowledgeSubmissions();
 }
