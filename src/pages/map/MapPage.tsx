@@ -28,7 +28,7 @@ export default function MapPage() {
     ]);
 
     if (goodsResult.status === "fulfilled") {
-      setGoods(goodsResult.value);
+      setGoods(Array.isArray(goodsResult.value) ? goodsResult.value : []);
     } else {
       setGoods([]);
     }
