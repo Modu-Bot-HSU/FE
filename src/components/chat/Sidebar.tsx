@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import logoUrl from "../../assets/logo.svg";
 
@@ -22,6 +23,17 @@ const menuSections = [
 ] as const;
 
 export default function HomeSidebar({ open, onClose }: Props) {
+  const asideRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (open) return;
+
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && asideRef.current?.contains(active)) {
+      active.blur();
+    }
+  }, [open]);
+
   return (
     <>
       <div
@@ -30,6 +42,7 @@ export default function HomeSidebar({ open, onClose }: Props) {
         aria-hidden={!open}
       />
       <aside
+        ref={asideRef}
         className={`absolute left-0 top-0 z-[92] h-full w-[86vw] max-w-[340px] bg-[#F5F5F5] px-6 py-8 shadow-xl transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"}`}
         aria-hidden={!open}
       >

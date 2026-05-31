@@ -11,7 +11,22 @@ export interface NftGoodsItem {
   isSold: boolean;
   txHash: string | null;
   owner: string | null;
+  ownerName?: string | null;
 }
+
+type RawNftGoodsOwner =
+  | string
+  | null
+  | {
+      name?: string | null;
+      walletAddress?: string | null;
+      [key: string]: unknown;
+    };
+
+type RawNftGoodsItem = Omit<NftGoodsItem, "owner" | "txHash"> & {
+  owner: RawNftGoodsOwner;
+  txHash: string | null;
+};
 
 export interface PurchaseNftRequest {
   index: number;
@@ -63,6 +78,34 @@ const createAuthConfig = (accessToken?: string) => {
     },
   };
 };
+
+const normalizeOwnerAddress = (owner: RawNftGoodsOwner): string | null => {
+  if (typeof owner === "string") return owner;
+  if (owner && typeof owner === "object" && typeof owner.walletAddress === "string") {
+    return owner.walletAddress;
+  }
+  return null;
+};
+
+const normalizeOwnerName = (owner: RawNftGoodsOwner): string | null => {
+  if (owner && typeof owner === "object" && typeof owner.name === "string") {
+    return owner.name;
+  }
+  return null;
+};
+
+const normalizeNftGoodsItem = (item: RawNftGoodsItem): NftGoodsItem => ({
+  index: item.index,
+  name: item.name,
+  description: item.description,
+  price: item.price,
+  imageUrl: item.imageUrl,
+  metadataUrl: item.metadataUrl,
+  isSold: item.isSold,
+  txHash: item.txHash ?? null,
+  owner: normalizeOwnerAddress(item.owner),
+  ownerName: normalizeOwnerName(item.owner),
+});
 
 export const ensureNftPurchaseApproval = async (
   requiredAmount: string | number,
@@ -131,6 +174,7 @@ const MOCK_NFT_GOODS: NftGoodsItem[] = [
     isSold: true,
     txHash: "0xabcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234",
     owner: "0xABCD...1234",
+    ownerName: "홍길동",
   },
   {
     index: 2,
@@ -265,11 +309,11 @@ export const getNftGoods = async (accessToken?: string): Promise<NftGoodsItem[]>
   if (USE_MOCK) {
     return new Promise((resolve) => setTimeout(() => resolve(MOCK_NFT_GOODS), 300));
   }
-  const { data } = await axiosInstance.get<NftGoodsItem[]>(
+  const { data } = await axiosInstance.get<RawNftGoodsItem[]>(
     "/blockchain/nft/goods",
     createAuthConfig(accessToken),
   );
-  return data;
+  return Array.isArray(data) ? data.map(normalizeNftGoodsItem) : [];
 };
 
 export const purchaseNft = async (
