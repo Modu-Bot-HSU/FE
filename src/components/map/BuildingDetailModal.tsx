@@ -68,7 +68,7 @@ export default function BuildingDetailModal({
           <BalancePill balance={balance} className="mb-2 ml-auto mr-4" />
         )}
 
-        <div className="max-h-[75vh] min-h-[62vh] overflow-y-auto rounded-t-3xl bg-[#F5F5F4] p-5 shadow-[0_-8px_24px_rgba(0,0,0,0.18)]">
+        <div className="max-h-[75vh] overflow-y-auto rounded-t-3xl bg-[#F5F5F4] p-5 shadow-[0_-8px_24px_rgba(0,0,0,0.18)]">
           <span
             className="inline-flex rounded-full border border-[#A8A29F] bg-[#F5F5F4] px-2.5 py-0.5 text-[10px] font-medium text-[#44403D]"
           >

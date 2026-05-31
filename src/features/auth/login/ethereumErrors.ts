@@ -23,3 +23,23 @@ export const alertEthereumFlowError = (error: unknown) => {
   }
   alert("오류가 발생했습니다. 다시 시도해주세요.");
 };
+
+export const isUserRejectedEthereumAction = (error: unknown): boolean => {
+  if (typeof error !== "object" || error === null) return false;
+
+  const walletCode = "code" in error ? (error as { code?: number | string }).code : undefined;
+  if (
+    walletCode === 4001 ||
+    walletCode === "4001" ||
+    walletCode === "ACTION_REJECTED"
+  ) {
+    return true;
+  }
+
+  const infoErrorCode =
+    "info" in error
+      ? ((error as { info?: { error?: { code?: number | string } } }).info?.error?.code ?? undefined)
+      : undefined;
+
+  return infoErrorCode === 4001 || infoErrorCode === "4001";
+};
