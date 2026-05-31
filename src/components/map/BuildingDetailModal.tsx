@@ -59,6 +59,7 @@ export default function BuildingDetailModal({
 
   const isSold = currentItem?.isSold ?? false;
   const productHash = isSold ? currentItem?.txHash ?? null : null;
+  const ownerName = isSold ? currentItem?.ownerName ?? null : null;
   const ownerHash = isSold ? currentItem?.owner ?? null : null;
   const numericBalance = Number(balance);
   const numericPrice = Number(currentItem?.price ?? 0);
@@ -94,7 +95,7 @@ export default function BuildingDetailModal({
           <dl className="mt-6 space-y-2 text-[12px] text-slate-700">
             <div className="grid grid-cols-[110px_1fr] gap-2">
               <dt className="text-slate-500">Hash</dt>
-              <dd className="truncate">{formatShort(currentItem?.txHash)}</dd>
+              <dd className="truncate">{formatShort(productHash)}</dd>
             </div>
             <div className="grid grid-cols-[110px_1fr] gap-2">
               <dt className="text-slate-500">Metadata</dt>
@@ -102,7 +103,7 @@ export default function BuildingDetailModal({
             </div>
             <div className="grid grid-cols-[110px_1fr] gap-2">
               <dt className="text-slate-500">Owner</dt>
-              <dd>{formatShort(currentItem?.name, "-")}</dd>
+              <dd>{formatShort(ownerName, "-")}</dd>
             </div>
             <div className="grid grid-cols-[110px_1fr] gap-2">
               <dt className="text-slate-500">Owner Hash</dt>
