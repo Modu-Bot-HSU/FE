@@ -10,6 +10,7 @@ import BuildingDetailModal from "../../components/map/BuildingDetailModal.tsx";
 import { AxiosError } from "axios";
 import NftGridSection from "../../components/shop/NftGridSection";
 import BalancePill from "../../components/common/BalancePill";
+import { isUserRejectedEthereumAction } from "../../features/auth/login/ethereumErrors";
 
 export default function ShopPage() {
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
@@ -56,13 +57,11 @@ export default function ShopPage() {
       setMessage({ ok: true, text: "구매 요청이 완료되었습니다." });
       await fetchShopData();
     } catch (err) {
-      const walletCode =
-        typeof err === "object" && err !== null && "code" in err
-          ? (err as { code?: number | string }).code
-          : undefined;
-
-      if (walletCode === 4001 || walletCode === "4001") {
-        setMessage({ ok: false, text: "MetaMask 서명을 취소했습니다." });
+      if (isUserRejectedEthereumAction(err)) {
+        setMessage({
+          ok: false,
+          text: "MetaMask 승인/서명을 취소했습니다. 계속하려면 구매하기를 다시 눌러 진행해주세요.",
+        });
         return;
       }
 
