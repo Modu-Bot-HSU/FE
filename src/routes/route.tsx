@@ -9,8 +9,10 @@ import Login from "../pages/login/Login.tsx";
 import NftMapPage from "../pages/map/MapPage.tsx";
 import NftCollectionPage from "../pages/shop/ShopPage.tsx";
 import DailyQPage from "../pages/DailyQPage.tsx";
+import DailyQHistoryPage from "../pages/daily-q/DailyQHistoryPage.tsx";
 import ProfilePage from "../pages/profile/ProfilePage.tsx";
 import Splash from "../pages/chat/Splash.tsx";
+import AdminPage from "../pages/admin/AdminPage.tsx";
 import { ProtectedRoute, PublicOnlyRoute } from "./protectedRoute.tsx";
 
 const routes = [
@@ -36,9 +38,11 @@ const routes = [
             children: [
               { path: "chat", element: <Home /> },
               { path: "daily-q", element: <DailyQPage /> },
+              { path: "daily-q/history", element: <DailyQHistoryPage /> },
               { path: "campus", element: <NftMapPage /> },
               { path: "campus/collection", element: <NftCollectionPage /> },
               { path: "profile", element: <ProfilePage /> },
+              { path: "admin", element: <AdminPage /> },
             ],
           },
           { path: "about", element: <About /> },
