@@ -7,11 +7,20 @@ export default function HomeSplash() {
 
   useEffect(() => {
     const checkAuthAndRedirect = () => {
-      const accessToken = localStorage.getItem("accessToken");
-      const hasToken = typeof accessToken === "string" && accessToken.length > 0;
+      const token = localStorage.getItem("accessToken");
+      let isValid = false;
+      if (typeof token === "string" && token.length > 0) {
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          const exp = payload.exp as number | undefined;
+          isValid = exp == null || Date.now() / 1000 < exp;
+        } catch {
+          isValid = false;
+        }
+      }
 
       setTimeout(() => {
-        if (hasToken) {
+        if (isValid) {
           navigate("/chat", { replace: true });
         } else {
           navigate("/auth/login", { replace: true });

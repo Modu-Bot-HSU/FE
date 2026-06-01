@@ -1,6 +1,8 @@
 import { API_BASE_URL, getBearerAuthHeaders, parseApiResponse } from "../httpClient";
 import type {
   KnowledgeDeleteBody,
+  KnowledgeSubmissionItem,
+  KnowledgeSubmissionStatus,
   KnowledgeListParams,
   KnowledgeListResponse,
   KnowledgeMutationResponse,

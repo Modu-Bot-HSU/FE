@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { formatCountdown } from "./signUpHelpers";
-import { runConnectMetaMask, runSignUpComplete } from "./signUpWalletActions";
+import {
+  runConnectMetaMask,
+  runSignUpComplete,
+} from "./signUpWalletActions";
 import { runSendUniversityCode, runVerifyEmailCode } from "./signUpEmailActions";
 import { useSignUpMutations } from "./useSignUpMutations";
 

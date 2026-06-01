@@ -9,6 +9,8 @@ type CompleteMut = UseMutationResult<
   unknown
 >;
 
+export type SignUpCompleteProfile = { email: string; wallet: string };
+
 export async function runSignUpComplete(
   email: string,
   walletAddress: string,
@@ -22,7 +24,10 @@ export async function runSignUpComplete(
     return false;
   }
 
-  if (!/^0x/i.test(trimmedWalletAddress) || trimmedWalletAddress.length !== 42) {
+  if (
+    !/^0x/i.test(trimmedWalletAddress) ||
+    trimmedWalletAddress.length !== 42
+  ) {
     alert("올바른 지갑 주소를 입력해주세요.");
     return false;
   }
@@ -49,7 +54,8 @@ export async function runSignUpComplete(
   }
 
   if (
-    normalizeWalletAddress(trimmedWalletAddress) !== normalizeWalletAddress(activeAccountRaw)
+    normalizeWalletAddress(trimmedWalletAddress) !==
+    normalizeWalletAddress(activeAccountRaw)
   ) {
     alert(
       "입력한 지갑 주소와 메타마스크에서 선택한 계정이 다릅니다. 주소를 맞추거나 메타마스크 계정을 바꿔주세요.",
@@ -66,7 +72,9 @@ export async function runSignUpComplete(
   return true;
 }
 
-export async function runConnectMetaMask(setWalletAddress: (w: string) => void): Promise<void> {
+export async function runConnectMetaMask(
+  setWalletAddress: (w: string) => void,
+): Promise<void> {
   try {
     if (!window.ethereum) {
       alert("메타마스크 설치가 필요합니다.");

@@ -5,6 +5,7 @@ import {
   getNftGoods,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
+import { fetchMySubmissions } from "../../apis/knowledge/knowledge";
 import { useAuthStore } from "../../store/useAuthStore";
 import { APP_BACKGROUND, SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
 import NftGridSection from "../../components/shop/NftGridSection";
@@ -14,11 +15,6 @@ import { countCreateSubmissionStats } from "../../features/knowledge/knowledgeSu
 
 type ProfileDailyQData = {
   walletType: string;
-  dailyQ: {
-    received: number;
-    pending: number;
-    notCredited: number;
-  };
 };
 
 const defaultDailyQ: ProfileDailyQData = {
@@ -43,20 +39,45 @@ export default function ProfilePage() {
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
   useEffect(() => {
-    Promise.allSettled([getHsBalance(accessToken), getNftGoods(accessToken)])
-      .then(([balanceResult, goodsResult]) => {
+    setLoading(true);
+    Promise.allSettled([
+      getHsBalance(accessToken),
+      getNftGoods(accessToken),
+      fetchMySubmissions(),
+    ])
+      .then(([balanceResult, goodsResult, submissionsResult]) => {
         if (balanceResult.status === "fulfilled") {
+          console.log("[ProfilePage] balance:", balanceResult.value);
           setBalance(balanceResult.value.balance);
+        } else {
+          console.warn("[ProfilePage] balance fetch failed:", balanceResult.reason);
         }
 
         if (goodsResult.status === "fulfilled") {
+          console.log("[ProfilePage] nftGoods:", goodsResult.value);
           setOwnedNfts(goodsResult.value.filter((item) => item.isSold));
         } else {
+          console.warn("[ProfilePage] nftGoods fetch failed:", goodsResult.reason);
           setOwnedNfts([]);
+        }
+
+        if (submissionsResult.status === "fulfilled") {
+          console.log("[ProfilePage] submissions:", submissionsResult.value);
+          const received = submissionsResult.value.filter((item) => item.status === "APPROVED").length;
+          const pending = submissionsResult.value.filter((item) => item.status === "PENDING").length;
+          const notCredited = submissionsResult.value.filter((item) => item.status === "REJECTED").length;
+          setSubmissionStats({ received, pending, notCredited });
+        } else {
+          console.warn("[ProfilePage] submissions fetch failed:", submissionsResult.reason);
+          setSubmissionStats({ received: 0, pending: 0, notCredited: 0 });
         }
       })
       .catch(() => {
         setOwnedNfts([]);
+        setSubmissionStats({ received: 0, pending: 0, notCredited: 0 });
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, [accessToken]);
 
@@ -92,51 +113,51 @@ export default function ProfilePage() {
       style={{ backgroundColor: APP_BACKGROUND }}
     >
       
-      <section>
+      <section className="mt-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[#bdbdbd] bg-[#dedede] text-4xl font-bold text-[#9d9d9d]">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border-[0.5px] border-[#A8A29F] bg-[#D6D3D1] text-[34px] font-bold text-[#A8A29F]">
             {initials}
           </div>
 
           <div>
-            <h1 className="text-[44px] font-bold leading-none text-[#10314f]">{profile.name}</h1>
-            <p className="mt-2 text-2xl text-[#9a9a9a]">{profile.email}</p>
+            <h1 className="text-[28px] font-semibold leading-none text-[#002A47]">{profile.name}</h1>
+            <p className="mt-2 text-[14px] text-[#A8A29F]">{profile.email}</p>
           </div>
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-2">
           <div className="rounded-xl border border-[#c9c9c9] bg-[#f4f4f4] px-3 py-3 text-center">
-            <p className="text-4xl font-bold leading-none text-[#10314f]">{balance}</p>
-            <p className="mt-1 text-lg text-[#6c6c6c]">Tokens Balance</p>
+            <p className="text-[24px] font-semibold leading-none text-[#002A47]">{balance}</p>
+            <p className="mt-1 text-[12px] text-[#78716D]">Tokens Balance</p>
           </div>
           <div className="rounded-xl border border-[#c9c9c9] bg-[#f4f4f4] px-3 py-3 text-center">
-            <p className="text-4xl font-bold leading-none text-[#10314f]">{myBuildings.length}</p>
-            <p className="mt-1 text-lg text-[#6c6c6c]">My Buildings</p>
+            <p className="text-[24px] font-semibold leading-none text-[#002A47]">{myBuildings.length}</p>
+            <p className="mt-1 text-[12px] text-[#78716D]">My Buildings</p>
           </div>
         </div>
       </section>
 
       <section className="mt-6 border-t border-[#dfdfdf] pt-4">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-xl font-semibold tracking-wide text-[#6f6f6f]">DAILY Q HISTORY</h2>
+          <h2 className="text-[12px] font-bold tracking-wide text-[#78716D]">DAILY Q HISTORY</h2>
           {/* daily q history로 이동 */}
           <button type="button" onClick={() => navigate("/daily-q")} className="text-xl font-semibold text-[#10314f]">View History →</button>
         </div>
 
         <div className="flex rounded-xl border border-[#c9c9c9] bg-[#f4f4f4]">
           <div className="flex-1 py-3 text-center">
-            <p className="text-5xl font-bold leading-none text-[#2f8b3f]">{profile.dailyQ.received}</p>
-            <p className="mt-1 text-xl text-[#2f8b3f]">Received</p>
+            <p className="text-[24px] font-bold leading-none text-[#2D7A2D]">{submissionStats.received}</p>
+            <p className="mt-1 text-[12px] text-[#2D7A2D]">Received</p>
           </div>
           <div className="my-3 w-px bg-[#d5d5d5]" />
           <div className="flex-1 py-3 text-center">
-            <p className="text-5xl font-bold leading-none text-[#b56a00]">{profile.dailyQ.pending}</p>
-            <p className="mt-1 text-xl text-[#b56a00]">Pending</p>
+            <p className="text-[24px] font-bold leading-none text-[#B35900]">{submissionStats.pending}</p>
+            <p className="mt-1 text-[12px] text-[#B35900]">Pending</p>
           </div>
           <div className="my-3 w-px bg-[#d5d5d5]" />
           <div className="flex-1 py-3 text-center">
-            <p className="text-5xl font-bold leading-none text-[#d63a2f]">{profile.dailyQ.notCredited}</p>
-            <p className="mt-1 text-xl text-[#d63a2f]">Not Credited</p>
+            <p className="text-[24px] font-bold leading-none text-[#C0392B]">{submissionStats.notCredited}</p>
+            <p className="mt-1 text-[12px] text-[#C0392B]">Not Credited</p>
           </div>
         </div>
       </section>
@@ -148,6 +169,7 @@ export default function ProfilePage() {
           onItemClick={setSelectedItem}
           badgeText="Owned"
           emptyMessage="소유한 건물이 없습니다."
+          isLoading={loading}
         />
       </section>
 
@@ -161,19 +183,19 @@ export default function ProfilePage() {
       />
 
       <section className="mt-6 border-t border-[#dfdfdf] pt-4">
-        <h2 className="mb-3 text-xl font-semibold tracking-wide text-[#6f6f6f]">ACCOUNT</h2>
-        <div className="overflow-hidden rounded-xl border border-[#c9c9c9] bg-[#f4f4f4]">
-          <div className="grid grid-cols-[120px_1fr] border-b border-[#d7d7d7] px-4 py-3 text-lg">
-            <p className="font-semibold text-[#10314f]">Email</p>
-            <p className="truncate text-[#6b6b6b]">{profile.email}</p>
+        <h2 className="mb-3 text-[12px] font-bold tracking-wide text-[#78716D]">ACCOUNT</h2>
+        <div className="overflow-hidden rounded-xl border border-[#A8A29F] bg-[#f4f4f4]">
+          <div className="grid grid-cols-[120px_1fr] border-[0.5px] border-[#d7d7d7] px-4 py-3 text-[14px]">
+            <p className="font-medium text-[#002A47]">Email</p>
+            <p className="truncate text-right text-[#78716D]">{profile.email}</p>
           </div>
-          <div className="grid grid-cols-[120px_1fr] border-b border-[#d7d7d7] px-4 py-3 text-lg">
-            <p className="font-semibold text-[#10314f]">Wallet</p>
-            <p className="truncate text-[#6b6b6b]">{profile.walletAddress}</p>
+          <div className="grid grid-cols-[120px_1fr] border-b border-[#D6D3D1] px-4 py-3 text-[14px]">
+            <p className="font-medium text-[#002A47]">Wallet</p>
+            <p className="truncate text-right text-[#78716D]">{profile.walletAddress}</p>
           </div>
-          <div className="grid grid-cols-[120px_1fr] border-b border-[#d7d7d7] px-4 py-3 text-lg">
-            <p className="font-semibold text-[#10314f]">Wallet Type</p>
-            <p className="truncate text-[#6b6b6b]">{profile.walletType}</p>
+          <div className="grid grid-cols-[120px_1fr] border-b border-[#D6D3D1] px-4 py-3 text-[14px]">
+            <p className="font-medium text-[#002A47]">Wallet Type</p>
+            <p className="truncate text-right text-[#78716D]">{profile.walletType}</p>
           </div>
         </div>
       </section>

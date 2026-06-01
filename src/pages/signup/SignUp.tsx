@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AuthScreenLayout from "../../components/auth/AuthScreenLayout";
 import { useSignUp } from "../../features/auth/signup/useSignUp";
 import SignUpStepUniversity from "./SignUpStepUniversity";
@@ -9,12 +9,6 @@ import SignUpSuccess from "./SignUpSuccess";
 const SignUp = () => {
   const [step, setStep] = useState(1);
   const s = useSignUp();
-
-  useEffect(() => {
-    if (step === 3 && (!s.isEmailVerified || s.walletSessionSeconds <= 0)) {
-      setStep(2);
-    }
-  }, [step, s.isEmailVerified, s.walletSessionSeconds]);
 
   if (step === 4 && s.successProfile) {
     return <SignUpSuccess profile={s.successProfile} />;
