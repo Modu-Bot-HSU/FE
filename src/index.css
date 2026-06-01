@@ -25,6 +25,8 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  /* fixed 자식 요소가 viewport 대신 이 컨테이너 기준으로 포지셔닝되도록 */
+  transform: translateZ(0);
 }
 
 .mobile-frame-shell {
