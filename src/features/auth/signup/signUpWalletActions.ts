@@ -1,38 +1,40 @@
 import type { UseMutationResult } from "@tanstack/react-query";
-import { normalizeWalletAddress, type SignUpRequest } from "../../../apis/auth/auth";
-import { getErrorMessage, isHansungEmail } from "./signUpHelpers";
+import { normalizeWalletAddress } from "../../../apis/auth/auth";
+import { getErrorMessage } from "./signUpHelpers";
 
-type SignupMut = UseMutationResult<unknown, unknown, SignUpRequest, unknown>;
+type CompleteMut = UseMutationResult<
+  unknown,
+  unknown,
+  { email: string; walletAddress: string },
+  unknown
+>;
 
 export type SignUpCompleteProfile = { email: string; wallet: string };
 
 export async function runSignUpComplete(
   email: string,
-  name: string,
   walletAddress: string,
   setWalletAddress: (w: string) => void,
-  signupMutation: SignupMut,
-): Promise<SignUpCompleteProfile | null> {
-  if (!isHansungEmail(email)) {
-    alert("한성대학교 이메일만 사용 가능합니다.");
-    return null;
-  }
-
+  completeSignupMutation: CompleteMut,
+): Promise<boolean> {
   const trimmedWalletAddress = walletAddress.trim();
 
-  if (!trimmedWalletAddress || !name) {
-    alert("이메일, 지갑주소, 이름을 입력해주세요.");
-    return null;
+  if (!trimmedWalletAddress) {
+    alert("지갑 주소를 입력해주세요.");
+    return false;
   }
 
-  if (!/^0x/i.test(trimmedWalletAddress) || trimmedWalletAddress.length !== 42) {
+  if (
+    !/^0x/i.test(trimmedWalletAddress) ||
+    trimmedWalletAddress.length !== 42
+  ) {
     alert("올바른 지갑 주소를 입력해주세요.");
-    return null;
+    return false;
   }
 
   if (!window.ethereum) {
     alert("회원가입 전 메타마스크 연결이 필요합니다.");
-    return null;
+    return false;
   }
 
   let accounts: string[];
@@ -42,12 +44,13 @@ export async function runSignUpComplete(
     })) as string[];
   } catch (error: unknown) {
     alert(getErrorMessage(error));
-    return null;
+    return false;
   }
+
   const activeAccountRaw = (accounts[0] ?? "").trim();
   if (!activeAccountRaw) {
     alert("메타마스크 계정을 선택해주세요.");
-    return null;
+    return false;
   }
 
   if (
@@ -57,28 +60,21 @@ export async function runSignUpComplete(
     alert(
       "입력한 지갑 주소와 메타마스크에서 선택한 계정이 다릅니다. 주소를 맞추거나 메타마스크 계정을 바꿔주세요.",
     );
-    return null;
+    return false;
   }
 
   setWalletAddress(activeAccountRaw);
 
-  const emailNorm = email.trim().toLowerCase();
-  const walletNorm = normalizeWalletAddress(activeAccountRaw);
-
-  try {
-    await signupMutation.mutateAsync({
-      email,
-      walletAddress: activeAccountRaw,
-      name,
-    });
-  } catch {
-    return null;
-  }
-
-  return { email: emailNorm, wallet: walletNorm };
+  await completeSignupMutation.mutateAsync({
+    email,
+    walletAddress: activeAccountRaw,
+  });
+  return true;
 }
 
-export async function runConnectMetaMask(setWalletAddress: (w: string) => void): Promise<void> {
+export async function runConnectMetaMask(
+  setWalletAddress: (w: string) => void,
+): Promise<void> {
   try {
     if (!window.ethereum) {
       alert("메타마스크 설치가 필요합니다.");

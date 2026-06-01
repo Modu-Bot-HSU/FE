@@ -1,7 +1,9 @@
 import { useState } from "react";
+import AuthBackLink from "../../components/auth/AuthBackLink";
 import AuthButton from "../../components/auth/AuthButton";
 import AuthLabeledInput from "../../components/auth/AuthLabeledInput";
-import ScreenTitle from "../../components/auth/ScreenTitle";
+import SignUpProgressBar from "../../components/auth/SignUpProgressBar";
+import { LOGIN_UI } from "../../components/auth/authTheme";
 import { isHansungEmail } from "../../features/auth/signup/signUpHelpers";
 
 type Props = {
@@ -39,36 +41,52 @@ export default function SignUpStepUniversity({
   };
 
   return (
-    <div className="flex flex-col flex-1">
-      <button type="button" onClick={onBack} className="text-sm text-gray-500 mb-4 self-start">
-        ← Back
-      </button>
-      <ScreenTitle
-        title="Create your account"
-        subtitle="Step 1 of 3 — Verify your university"
-      />
-      <div className="flex flex-col gap-4 flex-1">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <SignUpProgressBar step={1} />
+
+      <header className="mb-8">
+        <h1
+          className="font-serif text-[28px] font-bold leading-tight tracking-tight text-[#0F253E]"
+        >
+          Create your account
+        </h1>
+        <p className="mt-3 text-[15px] leading-relaxed" style={{ color: LOGIN_UI.body }}>
+          Step 1 of 3 — Verify your university
+        </p>
+      </header>
+
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         <AuthLabeledInput
+          loginTone
           label="UNIVERSITY EMAIL"
           name="email"
           type="email"
-          placeholder="you@hansung.ac.kr"
+          placeholder="you@university.edu"
           value={email}
           onChange={(e) => onEmailChange(e.target.value)}
+          hint="Must be an official university email address"
           error={emailErr || undefined}
         />
         <AuthLabeledInput
+          loginTone
           label="FULL NAME"
           name="name"
-          placeholder="홍길동"
+          placeholder="Your name"
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
           error={nameErr || undefined}
         />
+
         <div className="mt-auto pt-6">
-          <AuthButton variant="primary" onClick={submit} disabled={sendPending}>
+          <AuthButton
+            variant="primary"
+            style={{ backgroundColor: LOGIN_UI.primary }}
+            onClick={() => void submit()}
+            disabled={sendPending}
+          >
             {sendPending ? "Sending…" : "Send verification code"}
           </AuthButton>
+          <AuthBackLink onClick={onBack} />
         </div>
       </div>
     </div>

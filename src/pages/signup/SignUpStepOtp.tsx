@@ -1,6 +1,8 @@
+import AuthBackLink from "../../components/auth/AuthBackLink";
 import AuthButton from "../../components/auth/AuthButton";
 import OtpCodeInput from "../../components/auth/OtpCodeInput";
-import ScreenTitle from "../../components/auth/ScreenTitle";
+import SignUpProgressBar from "../../components/auth/SignUpProgressBar";
+import { LOGIN_UI } from "../../components/auth/authTheme";
 
 type Props = {
   email: string;
@@ -11,7 +13,6 @@ type Props = {
   onBack: () => void;
   verifyPending: boolean;
   resendPending: boolean;
-  countdownLabel: string;
   remainingSeconds: number;
 };
 
@@ -24,36 +25,64 @@ export default function SignUpStepOtp({
   onBack,
   verifyPending,
   resendPending,
-  countdownLabel,
   remainingSeconds,
 }: Props) {
   return (
-    <div className="flex flex-col flex-1">
-      <button type="button" onClick={onBack} className="text-sm text-gray-500 mb-4 self-start">
-        ← Back
-      </button>
-      <ScreenTitle
-        title="Check your email"
-        subtitle={`We sent a 6-digit code to ${email || "your inbox"}.`}
-      />
-      <OtpCodeInput value={code} onChange={onCodeChange} disabled={verifyPending} />
-      <div className="flex justify-between items-center mt-4 text-sm">
-        <span className="text-gray-500">
-          {remainingSeconds > 0 ? `Expires in ${countdownLabel}` : "Code expired"}
-        </span>
-        <button
-          type="button"
-          onClick={() => void onResend()}
-          disabled={resendPending}
-          className="text-[#FF5C00] font-semibold underline disabled:opacity-40"
+    <div className="flex min-h-0 flex-1 flex-col">
+      <SignUpProgressBar step={2} />
+
+      <header className="mb-8">
+        <h1 className="font-serif text-[28px] font-bold leading-tight tracking-tight text-[#0F253E]">
+          Check your email
+        </h1>
+        <div
+          className="mt-3 text-[15px] leading-relaxed"
+          style={{ color: LOGIN_UI.body }}
         >
-          Resend code
-        </button>
+          <p>We sent a 6-digit code to</p>
+          <p className="mt-1 font-semibold text-[#0F253E]">
+            {email || "your inbox"}
+          </p>
+        </div>
+      </header>
+
+      <div>
+        <p
+          className="mb-2 text-xs font-semibold uppercase tracking-wide"
+          style={{ color: LOGIN_UI.body }}
+        >
+          VERIFICATION CODE
+        </p>
+        <OtpCodeInput
+          value={code}
+          onChange={onCodeChange}
+          disabled={verifyPending}
+        />
       </div>
-      <div className="mt-auto pt-8">
-        <AuthButton variant="primary" onClick={() => void onVerify()} disabled={verifyPending}>
+
+      <div className="mt-auto">
+        <p className="mb-6 text-sm" style={{ color: LOGIN_UI.body }}>
+          Didn&apos;t get it?{" "}
+          <button
+            type="button"
+            onClick={() => void onResend()}
+            disabled={resendPending || remainingSeconds > 0}
+            className="font-semibold underline-offset-2 hover:underline disabled:opacity-40"
+            style={{ color: LOGIN_UI.primary }}
+          >
+            Resend code
+          </button>
+        </p>
+
+        <AuthButton
+          variant="primary"
+          style={{ backgroundColor: LOGIN_UI.primary }}
+          onClick={() => void onVerify()}
+          disabled={verifyPending || code.length !== 6}
+        >
           {verifyPending ? "Verifying…" : "Verify"}
         </AuthButton>
+        <AuthBackLink onClick={onBack} />
       </div>
     </div>
   );
