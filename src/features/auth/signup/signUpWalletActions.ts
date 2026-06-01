@@ -1,25 +1,24 @@
 import type { UseMutationResult } from "@tanstack/react-query";
-import { normalizeWalletAddress, type SignUpRequest } from "../../../apis/auth/auth";
-import { getErrorMessage, isHansungEmail } from "./signUpHelpers";
+import { normalizeWalletAddress } from "../../../apis/auth/auth";
+import { getErrorMessage } from "./signUpHelpers";
 
-type SignupMut = UseMutationResult<unknown, unknown, SignUpRequest, unknown>;
+type CompleteMut = UseMutationResult<
+  unknown,
+  unknown,
+  { email: string; walletAddress: string },
+  unknown
+>;
 
 export async function runSignUpComplete(
   email: string,
-  name: string,
   walletAddress: string,
   setWalletAddress: (w: string) => void,
-  signupMutation: SignupMut,
+  completeSignupMutation: CompleteMut,
 ): Promise<boolean> {
-  if (!isHansungEmail(email)) {
-    alert("한성대학교 이메일만 사용 가능합니다.");
-    return false;
-  }
-
   const trimmedWalletAddress = walletAddress.trim();
 
-  if (!trimmedWalletAddress || !name) {
-    alert("이메일, 지갑주소, 이름을 입력해주세요.");
+  if (!trimmedWalletAddress) {
+    alert("지갑 주소를 입력해주세요.");
     return false;
   }
 
@@ -42,6 +41,7 @@ export async function runSignUpComplete(
     alert(getErrorMessage(error));
     return false;
   }
+
   const activeAccountRaw = (accounts[0] ?? "").trim();
   if (!activeAccountRaw) {
     alert("메타마스크 계정을 선택해주세요.");
@@ -49,8 +49,7 @@ export async function runSignUpComplete(
   }
 
   if (
-    normalizeWalletAddress(trimmedWalletAddress) !==
-    normalizeWalletAddress(activeAccountRaw)
+    normalizeWalletAddress(trimmedWalletAddress) !== normalizeWalletAddress(activeAccountRaw)
   ) {
     alert(
       "입력한 지갑 주소와 메타마스크에서 선택한 계정이 다릅니다. 주소를 맞추거나 메타마스크 계정을 바꿔주세요.",
@@ -60,10 +59,9 @@ export async function runSignUpComplete(
 
   setWalletAddress(activeAccountRaw);
 
-  await signupMutation.mutateAsync({
+  await completeSignupMutation.mutateAsync({
     email,
     walletAddress: activeAccountRaw,
-    name,
   });
   return true;
 }

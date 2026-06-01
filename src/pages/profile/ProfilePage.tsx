@@ -6,7 +6,7 @@ import {
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
 import { useAuthStore } from "../../store/useAuthStore";
-import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
+import { APP_BACKGROUND, SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
 import NftGridSection from "../../components/shop/NftGridSection";
 import BuildingDetailModal from "../../components/map/BuildingDetailModal";
 import { fetchMyKnowledgeSubmissions } from "../../apis/knowledge/knowledge";
@@ -87,7 +87,10 @@ export default function ProfilePage() {
     .toUpperCase();
 
   return (
-    <div className={`relative min-h-full bg-[#f3f3f3] px-4 pb-6 ${SIDEBAR_BUTTON_SAFE_TOP_CLASS}`}>
+    <div
+      className={`relative min-h-full px-4 pb-6 ${SIDEBAR_BUTTON_SAFE_TOP_CLASS}`}
+      style={{ backgroundColor: APP_BACKGROUND }}
+    >
       
       <section>
         <div className="flex items-center gap-4">

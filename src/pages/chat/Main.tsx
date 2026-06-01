@@ -10,7 +10,7 @@ export default function HomeMain() {
 
   return (
     <div
-      className={`min-h-[calc(100vh-0px)] flex flex-col px-4 ${CHAT_SAFE_TOP_CLASS}`}
+      className={`flex min-h-full flex-col px-4 ${CHAT_SAFE_TOP_CLASS}`}
       style={{ backgroundColor: HOME_BG }}
     >
       {chat.isChatActive ? (
