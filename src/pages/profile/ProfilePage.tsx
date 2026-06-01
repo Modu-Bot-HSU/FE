@@ -23,6 +23,7 @@ export default function ProfilePage() {
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
   const [balance, setBalance] = useState("");
+  const [profileName, setProfileName] = useState("");
   const [email, setEmail] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [ownedNfts, setOwnedNfts] = useState<NftGoodsItem[]>([]);
@@ -38,6 +39,7 @@ export default function ProfilePage() {
         if (myPageResult.status === "fulfilled") {
           const p = myPageResult.value;
           console.log("[ProfilePage] mypage:", p);
+          setProfileName(p.name ?? "");
           setBalance(p.hsTokenBalance);
           setEmail(p.email);
           setWalletAddress(p.walletAddress);
@@ -46,6 +48,7 @@ export default function ProfilePage() {
               ? p.nfts.map((n) => ({
                   ...n,
                   isSold: true,
+                  ownerName: p.name ?? tempUser?.name ?? null,
                   owner: p.walletAddress,
                   txHash: n.txHash ?? null,
                 }))
@@ -67,7 +70,7 @@ export default function ProfilePage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [accessToken]);
+  }, [accessToken, tempUser?.name]);
 
   const handleLogout = () => {
     clearAuthTokens();
@@ -77,7 +80,7 @@ export default function ProfilePage() {
   return (
     <div className={`relative min-h-full bg-[#f3f3f3] px-4 pb-6 ${SIDEBAR_BUTTON_SAFE_TOP_CLASS}`}>
       <ProfileHeader
-        name={tempUser?.name ?? ""}
+        name={profileName || tempUser?.name || ""}
         email={email || tempUser?.email || ""}
         balance={balance}
         buildingCount={ownedNfts.length}
@@ -98,6 +101,7 @@ export default function ProfilePage() {
 
       <BuildingDetailModal
         item={selectedItem}
+        balance={balance}
         onPurchase={() => {}}
         onClose={() => setSelectedItem(null)}
         isPurchasing={false}

@@ -6,8 +6,10 @@ type Props = {
 };
 
 export default function ProfileHeader({ name, email, balance, buildingCount }: Props) {
-  const initials = name
+  const initials = (name || "?")
+    .trim()
     .split(" ")
+    .filter(Boolean)
     .map((w) => w[0])
     .join("")
     .slice(0, 2)
