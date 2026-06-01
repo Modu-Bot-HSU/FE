@@ -1,6 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import logoUrl from "../../assets/logo.svg";
+import { getMyPage } from "../../apis/blockchain/blockchain";
+import { useAuthStore } from "../../store/useAuthStore";
 
 type Props = {
   open: boolean;
@@ -24,6 +26,27 @@ const menuSections = [
 
 export default function HomeSidebar({ open, onClose }: Props) {
   const asideRef = useRef<HTMLElement | null>(null);
+  const tempUser = useAuthStore((state) => state.tempUser);
+  const [userEmail, setUserEmail] = useState("");
+  const accessToken = localStorage.getItem("accessToken") ?? undefined;
+
+  useEffect(() => {
+    setUserEmail(tempUser?.email ?? "");
+  }, [tempUser?.email]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+
+    getMyPage(accessToken)
+      .then((data) => {
+        if (typeof data.email === "string") {
+          setUserEmail(data.email);
+        }
+      })
+      .catch(() => {
+        // no-op: fallback to tempUser email
+      });
+  }, [accessToken]);
 
   useEffect(() => {
     if (open) return;
@@ -48,7 +71,7 @@ export default function HomeSidebar({ open, onClose }: Props) {
       >
         <div className="mb-8">
           <img src={logoUrl} alt="UniMint" className="h-9 w-auto" />
-          <p className="mt-2 text-base text-[#5f6776]">sean@university.edu</p>
+          <p className="mt-2 text-base text-[#5f6776]">{userEmail || "-"}</p>
         </div>
 
         <nav className="space-y-6">

@@ -47,6 +47,7 @@ export default function DailyQPage() {
   const [selectedCategory, setSelectedCategory] = useState<KnowledgeCategory | null>(null);
   const [question, setQuestion] = useState<QuestionItem | null>(null);
   const [remaining, setRemaining] = useState(0);
+  const [history, setHistory] = useState<KnowledgeSubmissionItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

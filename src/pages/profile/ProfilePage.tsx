@@ -4,7 +4,8 @@ import { getMyPage, type NftGoodsItem } from "../../apis/blockchain/blockchain";
 import { fetchMyKnowledgeSubmissions } from "../../apis/knowledge/knowledge";
 import { clearAuthTokens } from "../../apis/auth/auth";
 import { useAuthStore } from "../../store/useAuthStore";
-import { APP_BACKGROUND, SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
+import { countCreateSubmissionStats } from "../../features/knowledge/knowledgeSubmissionStats";
+import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
 import NftGridSection from "../../components/shop/NftGridSection";
 import BuildingDetailModal from "../../components/map/BuildingDetailModal";
 import ProfileHeader from "./components/ProfileHeader";
@@ -22,6 +23,7 @@ export default function ProfilePage() {
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
   const [balance, setBalance] = useState("");
+  const [profileName, setProfileName] = useState("");
   const [email, setEmail] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [ownedNfts, setOwnedNfts] = useState<NftGoodsItem[]>([]);
@@ -37,6 +39,7 @@ export default function ProfilePage() {
         if (myPageResult.status === "fulfilled") {
           const p = myPageResult.value;
           console.log("[ProfilePage] mypage:", p);
+          setProfileName(p.name ?? "");
           setBalance(p.hsTokenBalance);
           setEmail(p.email);
           setWalletAddress(p.walletAddress);
@@ -45,6 +48,7 @@ export default function ProfilePage() {
               ? p.nfts.map((n) => ({
                   ...n,
                   isSold: true,
+                  ownerName: p.name ?? tempUser?.name ?? null,
                   owner: p.walletAddress,
                   txHash: n.txHash ?? null,
                 }))
@@ -66,7 +70,7 @@ export default function ProfilePage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [accessToken]);
+  }, [accessToken, tempUser?.name]);
 
   const handleLogout = () => {
     clearAuthTokens();
@@ -74,41 +78,13 @@ export default function ProfilePage() {
   };
 
   return (
-    <div
-      className={`relative min-h-full px-4 pb-6 ${SIDEBAR_BUTTON_SAFE_TOP_CLASS}`}
-      style={{ backgroundColor: APP_BACKGROUND }}
-    >
-      
-      <section className="mt-6">
-        <div className="flex items-center gap-4">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border-[0.5px] border-[#A8A29F] bg-[#D6D3D1] text-[34px] font-bold text-[#A8A29F]">
-            {initials}
-          </div>
-
-          <div>
-            <h1 className="text-[28px] font-semibold leading-none text-[#002A47]">{profile.name}</h1>
-            <p className="mt-2 text-[14px] text-[#A8A29F]">{profile.email}</p>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-2 gap-2">
-          <div className="rounded-xl border border-[#c9c9c9] bg-[#f4f4f4] px-3 py-3 text-center">
-            <p className="text-[24px] font-semibold leading-none text-[#002A47]">{balance}</p>
-            <p className="mt-1 text-[12px] text-[#78716D]">Tokens Balance</p>
-          </div>
-          <div className="rounded-xl border border-[#c9c9c9] bg-[#f4f4f4] px-3 py-3 text-center">
-            <p className="text-[24px] font-semibold leading-none text-[#002A47]">{myBuildings.length}</p>
-            <p className="mt-1 text-[12px] text-[#78716D]">My Buildings</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mt-6 border-t border-[#dfdfdf] pt-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-[12px] font-bold tracking-wide text-[#78716D]">DAILY Q HISTORY</h2>
-          {/* daily q history로 이동 */}
-          <button type="button" onClick={() => navigate("/daily-q")} className="text-xl font-semibold text-[#10314f]">View History →</button>
-        </div>
+    <div className={`relative min-h-full bg-[#f3f3f3] px-4 pb-6 ${SIDEBAR_BUTTON_SAFE_TOP_CLASS}`}>
+      <ProfileHeader
+        name={profileName || tempUser?.name || ""}
+        email={email || tempUser?.email || ""}
+        balance={balance}
+        buildingCount={ownedNfts.length}
+      />
 
       <DailyQStatsSection stats={dailyQStats} />
 
@@ -125,6 +101,7 @@ export default function ProfilePage() {
 
       <BuildingDetailModal
         item={selectedItem}
+        balance={balance}
         onPurchase={() => {}}
         onClose={() => setSelectedItem(null)}
         isPurchasing={false}

@@ -290,6 +290,7 @@ export interface MyPageNftItem {
 }
 
 export interface MyPageResponse {
+  name?: string;
   email: string;
   walletAddress: string;
   hsTokenBalance: string;
