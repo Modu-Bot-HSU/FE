@@ -14,10 +14,19 @@ type BuildingDetailModalProps = {
   closeLabel?: string;
 };
 
-const formatShort = (value: string | null | undefined, fallback = "-") => {
-  if (!value) return fallback;
-  if (value.length <= 14) return value;
-  return `${value.slice(0, 6)}...${value.slice(-4)}`;
+const formatShort = (value: unknown, fallback = "-") => {
+  if (value === null || value === undefined) return fallback;
+
+  const text =
+    typeof value === "string"
+      ? value
+      : typeof value === "number" || typeof value === "bigint" || typeof value === "boolean"
+        ? String(value)
+        : null;
+
+  if (!text) return fallback;
+  if (text.length <= 14) return text;
+  return `${text.slice(0, 6)}...${text.slice(-4)}`;
 };
 
 export default function BuildingDetailModal({
@@ -49,8 +58,9 @@ export default function BuildingDetailModal({
   if (!currentItem && !open) return null;
 
   const isSold = currentItem?.isSold ?? false;
-  const owner = isSold ? currentItem?.owner ?? null : null;
-  const txHash = isSold ? currentItem?.txHash ?? null : null;
+  const productHash = isSold ? currentItem?.txHash ?? null : null;
+  const ownerName = isSold ? currentItem?.ownerName ?? null : null;
+  const ownerHash = isSold ? currentItem?.owner ?? null : null;
   const numericBalance = Number(balance);
   const numericPrice = Number(currentItem?.price ?? 0);
   const isInsufficientBalance =
@@ -68,7 +78,7 @@ export default function BuildingDetailModal({
           <BalancePill balance={balance} className="mb-2 ml-auto mr-4" />
         )}
 
-        <div className="max-h-[75vh] min-h-[62vh] overflow-y-auto rounded-t-3xl bg-[#F5F5F4] p-5 shadow-[0_-8px_24px_rgba(0,0,0,0.18)]">
+        <div className="max-h-[75vh] overflow-y-auto rounded-t-3xl bg-[#F5F5F4] p-5 shadow-[0_-8px_24px_rgba(0,0,0,0.18)]">
           <span
             className="inline-flex rounded-full border border-[#A8A29F] bg-[#F5F5F4] px-2.5 py-0.5 text-[10px] font-medium text-[#44403D]"
           >
@@ -84,16 +94,20 @@ export default function BuildingDetailModal({
 
           <dl className="mt-6 space-y-2 text-[12px] text-slate-700">
             <div className="grid grid-cols-[110px_1fr] gap-2">
+              <dt className="text-slate-500">Hash</dt>
+              <dd className="truncate">{formatShort(productHash)}</dd>
+            </div>
+            <div className="grid grid-cols-[110px_1fr] gap-2">
               <dt className="text-slate-500">Metadata</dt>
               <dd className="truncate">{formatShort(currentItem?.metadataUrl)}</dd>
             </div>
             <div className="grid grid-cols-[110px_1fr] gap-2">
               <dt className="text-slate-500">Owner</dt>
-              <dd>{formatShort(owner, "-")}</dd>
+              <dd>{formatShort(ownerName, "-")}</dd>
             </div>
             <div className="grid grid-cols-[110px_1fr] gap-2">
-              <dt className="text-slate-500">Tx Hash</dt>
-              <dd>{formatShort(txHash, "-")}</dd>
+              <dt className="text-slate-500">Owner Hash</dt>
+              <dd>{formatShort(ownerHash, "-")}</dd>
             </div>
           </dl>
 

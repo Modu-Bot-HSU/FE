@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
+  ensureNftPurchaseApproval,
   getHsBalance,
   getNftGoods,
   purchaseNft,
@@ -7,6 +8,7 @@ import {
 } from "../../apis/blockchain/blockchain";
 import BuildingDetailModal from "../../components/map/BuildingDetailModal.tsx";
 import CampusScene from "../../components/map/CampusScene.tsx";
+import { isUserRejectedEthereumAction } from "../../features/auth/login/ethereumErrors";
 
 export default function MapPage() {
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
@@ -27,7 +29,7 @@ export default function MapPage() {
     ]);
 
     if (goodsResult.status === "fulfilled") {
-      setGoods(goodsResult.value);
+      setGoods(Array.isArray(goodsResult.value) ? goodsResult.value : []);
     } else {
       setGoods([]);
     }
@@ -82,10 +84,16 @@ export default function MapPage() {
     setPurchaseMessage(null);
 
     try {
+      await ensureNftPurchaseApproval(selectedItem.price);
       await purchaseNft({ index: selectedItem.index }, accessToken);
       setPurchaseMessage("구매 요청이 완료되었습니다.");
       await fetchMapData();
     } catch (error) {
+      if (isUserRejectedEthereumAction(error)) {
+        setPurchaseMessage("MetaMask 승인/서명을 취소했습니다. 계속하려면 구매하기를 다시 눌러주세요.");
+        return;
+      }
+
       if (error instanceof Error && error.message) {
         setPurchaseMessage(error.message);
       } else {

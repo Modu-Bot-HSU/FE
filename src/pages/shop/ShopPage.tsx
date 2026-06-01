@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  ensureNftPurchaseApproval,
   getHsBalance,
   getNftGoods,
   purchaseNft,
@@ -9,6 +10,7 @@ import BuildingDetailModal from "../../components/map/BuildingDetailModal.tsx";
 import { AxiosError } from "axios";
 import NftGridSection from "../../components/shop/NftGridSection";
 import BalancePill from "../../components/common/BalancePill";
+import { isUserRejectedEthereumAction } from "../../features/auth/login/ethereumErrors";
 
 export default function ShopPage() {
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
@@ -50,14 +52,25 @@ export default function ShopPage() {
     setMessage(null);
 
     try {
+      await ensureNftPurchaseApproval(selectedItem.price);
       await purchaseNft({ index: selectedItem.index }, accessToken);
       setMessage({ ok: true, text: "구매 요청이 완료되었습니다." });
       await fetchShopData();
     } catch (err) {
+      if (isUserRejectedEthereumAction(err)) {
+        setMessage({
+          ok: false,
+          text: "MetaMask 승인/서명을 취소했습니다. 계속하려면 구매하기를 다시 눌러 진행해주세요.",
+        });
+        return;
+      }
+
       const msg =
         err instanceof AxiosError
           ? (err.response?.data as { message?: string })?.message ?? err.message
-          : "구매 중 오류가 발생했습니다.";
+          : err instanceof Error
+            ? err.message
+            : "구매 중 오류가 발생했습니다.";
       setMessage({ ok: false, text: msg });
     } finally {
       setPurchasing(false);

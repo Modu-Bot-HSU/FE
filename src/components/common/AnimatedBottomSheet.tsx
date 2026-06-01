@@ -83,12 +83,17 @@ export default function AnimatedBottomSheet({
       />
 
       <div
-        className={`fixed inset-x-0 bottom-0 z-[80] transition-all duration-300 ${
-          visible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+        className={`pointer-events-none fixed inset-0 z-[80] flex items-end justify-center transition-all duration-300 ${
+          visible ? "opacity-100" : "opacity-0"
         }`}
-        onClick={(event) => event.stopPropagation()}
       >
-        {children}
+        <div
+          className={`pointer-events-auto w-full max-w-[430px] transition-transform duration-300 ${
+            visible ? "translate-y-0" : "translate-y-8"
+          }`}
+        >
+          {children}
+        </div>
       </div>
     </>
   );
