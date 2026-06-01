@@ -4,8 +4,7 @@ import { getMyPage, type NftGoodsItem } from "../../apis/blockchain/blockchain";
 import { fetchMyKnowledgeSubmissions } from "../../apis/knowledge/knowledge";
 import { clearAuthTokens } from "../../apis/auth/auth";
 import { useAuthStore } from "../../store/useAuthStore";
-import { countCreateSubmissionStats } from "../../features/knowledge/knowledgeSubmissionStats";
-import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
+import { APP_BACKGROUND, SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
 import NftGridSection from "../../components/shop/NftGridSection";
 import BuildingDetailModal from "../../components/map/BuildingDetailModal";
 import ProfileHeader from "./components/ProfileHeader";
@@ -75,13 +74,41 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className={`relative min-h-full bg-[#f3f3f3] px-4 pb-6 ${SIDEBAR_BUTTON_SAFE_TOP_CLASS}`}>
-      <ProfileHeader
-        name={tempUser?.name ?? ""}
-        email={email || tempUser?.email || ""}
-        balance={balance}
-        buildingCount={ownedNfts.length}
-      />
+    <div
+      className={`relative min-h-full px-4 pb-6 ${SIDEBAR_BUTTON_SAFE_TOP_CLASS}`}
+      style={{ backgroundColor: APP_BACKGROUND }}
+    >
+      
+      <section className="mt-6">
+        <div className="flex items-center gap-4">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border-[0.5px] border-[#A8A29F] bg-[#D6D3D1] text-[34px] font-bold text-[#A8A29F]">
+            {initials}
+          </div>
+
+          <div>
+            <h1 className="text-[28px] font-semibold leading-none text-[#002A47]">{profile.name}</h1>
+            <p className="mt-2 text-[14px] text-[#A8A29F]">{profile.email}</p>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-2">
+          <div className="rounded-xl border border-[#c9c9c9] bg-[#f4f4f4] px-3 py-3 text-center">
+            <p className="text-[24px] font-semibold leading-none text-[#002A47]">{balance}</p>
+            <p className="mt-1 text-[12px] text-[#78716D]">Tokens Balance</p>
+          </div>
+          <div className="rounded-xl border border-[#c9c9c9] bg-[#f4f4f4] px-3 py-3 text-center">
+            <p className="text-[24px] font-semibold leading-none text-[#002A47]">{myBuildings.length}</p>
+            <p className="mt-1 text-[12px] text-[#78716D]">My Buildings</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-6 border-t border-[#dfdfdf] pt-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-[12px] font-bold tracking-wide text-[#78716D]">DAILY Q HISTORY</h2>
+          {/* daily q history로 이동 */}
+          <button type="button" onClick={() => navigate("/daily-q")} className="text-xl font-semibold text-[#10314f]">View History →</button>
+        </div>
 
       <DailyQStatsSection stats={dailyQStats} />
 

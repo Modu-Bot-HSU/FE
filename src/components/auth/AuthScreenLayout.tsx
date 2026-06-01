@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { APP_BACKGROUND } from "../../utils/layout";
 
 type Props = {
   children: ReactNode;
@@ -8,7 +9,8 @@ type Props = {
 export default function AuthScreenLayout({ children, className = "" }: Props) {
   return (
     <div
-      className={`min-h-[calc(100vh-0px)] flex flex-col px-5 pt-10 pb-8 bg-white ${className}`}
+      className={`flex min-h-full flex-col px-6 pb-8 pt-10 ${className}`}
+      style={{ backgroundColor: APP_BACKGROUND }}
     >
       {children}
     </div>

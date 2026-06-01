@@ -5,4 +5,4 @@ export const HOME_SUGGESTIONS = [
   "Cafeteria menu",
 ] as const;
 
-export const HOME_BG = "#F9F9F9";
+export const HOME_BG = "#F5F5F5";

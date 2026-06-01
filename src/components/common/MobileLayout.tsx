@@ -1,13 +1,15 @@
 import type { ReactNode } from "react";
+import { APP_BACKGROUND } from "../../utils/layout";
 
 type MobileLayoutProps = {
   children: ReactNode;
 };
 
+/*모바일 프레임*/
 export default function MobileLayout({ children }: MobileLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center">
-      <div className="relative w-full max-w-[430px] min-h-screen bg-white overflow-x-hidden">
+    <div className="mobile-frame-shell" style={{ backgroundColor: APP_BACKGROUND }}>
+      <div className="mobile-frame relative mx-auto" style={{ backgroundColor: APP_BACKGROUND }}>
         {children}
       </div>
     </div>

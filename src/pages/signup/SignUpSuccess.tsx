@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import AuthButton from "../../components/auth/AuthButton";
 import AuthScreenLayout from "../../components/auth/AuthScreenLayout";
-import { AUTH } from "../../components/auth/authTheme";
+import { LOGIN_UI } from "../../components/auth/authTheme";
+import { truncateMiddleWalletAddress } from "../../utils/walletDisplay";
 
 type Profile = { email: string; wallet: string };
 
@@ -11,39 +12,50 @@ type Props = {
 
 export default function SignUpSuccess({ profile }: Props) {
   const navigate = useNavigate();
+  const shortWallet = truncateMiddleWalletAddress(profile.wallet);
 
   return (
     <AuthScreenLayout className="justify-center">
-      <div className="flex flex-col items-center text-center flex-1 justify-center">
-        <div
-          className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mb-6"
-          style={{ backgroundColor: `${AUTH.primary}22` }}
-        >
+      <div className="flex flex-1 flex-col items-center justify-center text-center">
+        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#0F253E] text-3xl text-white">
           ✓
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">You&apos;re in!</h1>
-        <p className="text-gray-500 mt-2 text-sm px-2">
+        <h1 className="font-serif text-[32px] font-bold text-[#0F253E]">You&apos;re in!</h1>
+        <p className="mt-3 px-2 text-sm leading-relaxed" style={{ color: LOGIN_UI.body }}>
           Your account is ready. Welcome to ModuBot.
         </p>
-        <div
-          className="w-full mt-8 rounded-[10px] border text-left p-4 space-y-3"
-          style={{ borderColor: AUTH.border }}
-        >
-          <div>
-            <p className="text-xs font-semibold" style={{ color: AUTH.label }}>
-              Email
-            </p>
-            <p className="text-sm break-all">{profile.email}</p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold" style={{ color: AUTH.label }}>
-              Wallet
-            </p>
-            <p className="text-xs font-mono break-all">{profile.wallet}</p>
+
+        <div className="mt-10 w-full text-left">
+          <p
+            className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em]"
+            style={{ color: LOGIN_UI.body }}
+          >
+            ACCOUNT
+          </p>
+          <div
+            className="overflow-hidden rounded-[10px] border bg-white"
+            style={{ borderColor: LOGIN_UI.border }}
+          >
+            <div
+              className="grid grid-cols-[88px_1fr] gap-3 border-b px-4 py-3.5 text-sm"
+              style={{ borderColor: LOGIN_UI.border }}
+            >
+              <span className="font-semibold text-[#0F253E]">Email</span>
+              <span className="truncate text-right text-[#717171]">{profile.email}</span>
+            </div>
+            <div className="grid grid-cols-[88px_1fr] gap-3 px-4 py-3.5 text-sm">
+              <span className="font-semibold text-[#0F253E]">Wallet</span>
+              <span className="truncate text-right font-mono text-[#717171]">{shortWallet}</span>
+            </div>
           </div>
         </div>
-        <div className="w-full mt-10">
-          <AuthButton variant="primary" onClick={() => navigate("/")}>
+
+        <div className="mt-10 w-full">
+          <AuthButton
+            variant="primary"
+            style={{ backgroundColor: LOGIN_UI.primary }}
+            onClick={() => navigate("/chat")}
+          >
             Go to ModuBot
           </AuthButton>
         </div>

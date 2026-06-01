@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { AUTH } from "./authTheme";
+import { LOGIN_UI } from "./authTheme";
 
 type Props = {
   value: string;
@@ -37,23 +37,29 @@ export default function OtpCodeInput({ value, onChange, disabled }: Props) {
   };
 
   return (
-    <div className="flex gap-2 justify-between" onPaste={onPaste}>
-      {Array.from({ length: LENGTH }, (_, i) => (
-        <input
-          key={i}
-          ref={(el) => {
-            inputs.current[i] = el;
-          }}
-          inputMode="numeric"
-          maxLength={1}
-          disabled={disabled}
-          value={value[i] ?? ""}
-          onChange={(e) => handleInput(i, e.target.value)}
-          onKeyDown={(e) => handleKeyDown(i, e)}
-          className="w-11 h-12 text-center text-lg font-semibold rounded-lg border outline-none focus:ring-2 focus:ring-orange-200"
-          style={{ borderColor: AUTH.border }}
-        />
-      ))}
+    <div className="flex justify-between gap-2" onPaste={onPaste}>
+      {Array.from({ length: LENGTH }, (_, i) => {
+        const filled = Boolean(value[i]);
+        return (
+          <input
+            key={i}
+            ref={(el) => {
+              inputs.current[i] = el;
+            }}
+            inputMode="numeric"
+            maxLength={1}
+            disabled={disabled}
+            value={value[i] ?? ""}
+            onChange={(e) => handleInput(i, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(i, e)}
+            className="h-12 w-11 rounded-[10px] border-2 text-center text-lg font-semibold outline-none focus:ring-2 focus:ring-orange-200/80"
+            style={{
+              borderColor: filled ? LOGIN_UI.heading : LOGIN_UI.border,
+              color: LOGIN_UI.heading,
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
