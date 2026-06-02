@@ -4,6 +4,18 @@ type EthereumProviderLike = {
   request: (args: { method: string; params?: unknown }) => Promise<unknown>;
 };
 
+type AddEthereumChainParams = {
+  chainId: Hex;
+  chainName: string;
+  nativeCurrency: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  };
+  rpcUrls: string[];
+  blockExplorerUrls: string[];
+};
+
 const toHexChainId = (chainId: number): Hex => `0x${chainId.toString(16)}` as Hex;
 
 const DEFAULT_CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID ?? "80002");
@@ -23,6 +35,31 @@ const SUPPORTED_NETWORKS: Record<Hex, string> = {
       ? "https://rpc-amoy.polygon.technology"
       : `https://rpc.ankr.com/eth/${DEFAULT_CHAIN_ID}`,
 };
+
+const DEFAULT_CHAIN_PARAMS: AddEthereumChainParams =
+  DEFAULT_CHAIN_HEX === "0x13882"
+    ? {
+        chainId: DEFAULT_CHAIN_HEX,
+        chainName: "Polygon Amoy Testnet",
+        nativeCurrency: {
+          name: "POL",
+          symbol: "POL",
+          decimals: 18,
+        },
+        rpcUrls: ["https://rpc-amoy.polygon.technology"],
+        blockExplorerUrls: ["https://amoy.polygonscan.com"],
+      }
+    : {
+        chainId: DEFAULT_CHAIN_HEX,
+        chainName: `Network ${DEFAULT_CHAIN_ID}`,
+        nativeCurrency: {
+          name: "ETH",
+          symbol: "ETH",
+          decimals: 18,
+        },
+        rpcUrls: [SUPPORTED_NETWORKS[DEFAULT_CHAIN_HEX] ?? `https://rpc.ankr.com/eth/${DEFAULT_CHAIN_ID}`],
+        blockExplorerUrls: [],
+      };
 
 let evmClientPromise: Promise<MetamaskConnectEVM> | null = null;
 
@@ -82,6 +119,26 @@ export const ethereumRequest = async <T = unknown>(
 
   if (client && method === "eth_requestAccounts") {
     const { accounts } = await client.connect({ chainIds: [DEFAULT_CHAIN_HEX] });
+
+    try {
+      await client.switchChain({ chainId: DEFAULT_CHAIN_HEX });
+    } catch (error) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? (error as { code?: number | string }).code
+          : undefined;
+
+      if (code === 4902 || code === "4902") {
+        await client.getProvider().request({
+          method: "wallet_addEthereumChain",
+          params: [DEFAULT_CHAIN_PARAMS],
+        });
+        await client.switchChain({ chainId: DEFAULT_CHAIN_HEX });
+      } else {
+        throw error;
+      }
+    }
+
     return accounts as T;
   }
 
@@ -92,7 +149,24 @@ export const ethereumRequest = async <T = unknown>(
         : undefined;
 
     if (requestedChainId) {
-      await client.switchChain({ chainId: requestedChainId as Hex });
+      try {
+        await client.switchChain({ chainId: requestedChainId as Hex });
+      } catch (error) {
+        const code =
+          typeof error === "object" && error !== null && "code" in error
+            ? (error as { code?: number | string }).code
+            : undefined;
+
+        if ((code === 4902 || code === "4902") && requestedChainId === DEFAULT_CHAIN_HEX) {
+          await client.getProvider().request({
+            method: "wallet_addEthereumChain",
+            params: [DEFAULT_CHAIN_PARAMS],
+          });
+          await client.switchChain({ chainId: requestedChainId as Hex });
+        } else {
+          throw error;
+        }
+      }
       return null as T;
     }
   }
