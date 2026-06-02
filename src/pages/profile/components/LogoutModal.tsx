@@ -25,7 +25,7 @@ export default function LogoutModal({ onCancel, onConfirm }: Props) {
             onClick={onConfirm}
             className="flex-1 rounded-xl bg-[#C0392B] py-3 text-[14px] font-medium text-white"
           >
-            로그아웃
+            Sign Out
           </button>
         </div>
       </div>

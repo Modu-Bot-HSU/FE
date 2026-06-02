@@ -12,6 +12,7 @@ import {
   type SignUpRequest,
 } from "../../../apis/auth/auth";
 import { getErrorMessage } from "./signUpHelpers";
+import { ethereumRequest } from "../wallet/ethereumProvider";
 
 export const SIGNUP_WALLET_SESSION_SECONDS = 600;
 
@@ -67,8 +68,6 @@ export const useSignUpMutations = (s: Setters) => {
   const completeSignupMutation = useMutation<LoginResponse, unknown, CompletePayload>({
     /* Step 3 */
     mutationFn: async ({ email, walletAddress }) => {
-      if (!window.ethereum) throw new Error("메타마스크 설치가 필요합니다.");
-
       const walletRaw = walletAddress.trim();
       const { nonce } = await signupWallet({
         email: email.trim().toLowerCase(),
@@ -76,10 +75,7 @@ export const useSignUpMutations = (s: Setters) => {
       });
 
       const message = buildPersonalSignPayload(nonce);
-      const signature = (await window.ethereum.request({
-        method: "personal_sign",
-        params: [message, walletRaw],
-      })) as string;
+      const signature = await ethereumRequest<string>("personal_sign", [message, walletRaw]);
 
       return login({
         walletAddress: normalizeWalletAddress(walletRaw),

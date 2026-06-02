@@ -1,6 +1,7 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { normalizeWalletAddress } from "../../../apis/auth/auth";
 import { getErrorMessage } from "./signUpHelpers";
+import { ethereumRequest } from "../wallet/ethereumProvider";
 
 type CompleteMut = UseMutationResult<
   unknown,
@@ -32,16 +33,9 @@ export async function runSignUpComplete(
     return false;
   }
 
-  if (!window.ethereum) {
-    alert("회원가입 전 메타마스크 연결이 필요합니다.");
-    return false;
-  }
-
   let accounts: string[];
   try {
-    accounts = (await window.ethereum.request({
-      method: "eth_requestAccounts",
-    })) as string[];
+    accounts = await ethereumRequest<string[]>("eth_requestAccounts");
   } catch (error: unknown) {
     alert(getErrorMessage(error));
     return false;
@@ -76,13 +70,7 @@ export async function runConnectMetaMask(
   setWalletAddress: (w: string) => void,
 ): Promise<void> {
   try {
-    if (!window.ethereum) {
-      alert("메타마스크 설치가 필요합니다.");
-      return;
-    }
-    const accounts = (await window.ethereum.request({
-      method: "eth_requestAccounts",
-    })) as string[];
+    const accounts = await ethereumRequest<string[]>("eth_requestAccounts");
     const raw = (accounts[0] ?? "").trim();
     if (!raw) {
       alert("메타마스크 계정을 찾을 수 없습니다.");

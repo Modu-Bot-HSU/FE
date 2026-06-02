@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import {
   ensureNftPurchaseApproval,
   getHsBalance,
@@ -6,9 +6,10 @@ import {
   purchaseNft,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
-import BuildingDetailModal from "../../components/map/BuildingDetailModal.tsx";
 import CampusScene from "../../components/map/CampusScene.tsx";
 import { isUserRejectedEthereumAction } from "../../features/auth/login/ethereumErrors";
+
+const BuildingDetailModal = lazy(() => import("../../components/map/BuildingDetailModal.tsx"));
 
 export default function MapPage() {
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
@@ -115,14 +116,16 @@ export default function MapPage() {
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-44 bg-[linear-gradient(to_top,rgba(68,84,41,0.5)_0%,rgba(68,84,41,0.16)_36%,transparent_100%)]" />
 
-      <BuildingDetailModal
-        item={selectedItem}
-        balance={balance}
-        onPurchase={handlePurchase}
-        onClose={closeBottomSheet}
-        isPurchasing={isPurchasing}
-        purchaseMessage={purchaseMessage}
-      />
+      <Suspense fallback={null}>
+        <BuildingDetailModal
+          item={selectedItem}
+          balance={balance}
+          onPurchase={handlePurchase}
+          onClose={closeBottomSheet}
+          isPurchasing={isPurchasing}
+          purchaseMessage={purchaseMessage}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import {
   ensureNftPurchaseApproval,
   getHsBalance,
@@ -6,11 +6,12 @@ import {
   purchaseNft,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
-import BuildingDetailModal from "../../components/map/BuildingDetailModal.tsx";
 import { AxiosError } from "axios";
 import NftGridSection from "../../components/shop/NftGridSection";
 import BalancePill from "../../components/common/BalancePill";
 import { isUserRejectedEthereumAction } from "../../features/auth/login/ethereumErrors";
+
+const BuildingDetailModal = lazy(() => import("../../components/map/BuildingDetailModal.tsx"));
 
 export default function ShopPage() {
   const [goods, setGoods] = useState<NftGoodsItem[]>([]);
@@ -112,18 +113,20 @@ export default function ShopPage() {
         )}
       </div>
 
-      <BuildingDetailModal
-        item={selectedItem}
-        balance={balance}
-        onPurchase={handlePurchase}
-        onClose={() => {
-          setSelectedItem(null);
-          setMessage(null);
-        }}
-        isPurchasing={purchasing}
-        purchaseMessage={message?.text ?? null}
-        closeLabel="shop"
-      />
+      <Suspense fallback={null}>
+        <BuildingDetailModal
+          item={selectedItem}
+          balance={balance}
+          onPurchase={handlePurchase}
+          onClose={() => {
+            setSelectedItem(null);
+            setMessage(null);
+          }}
+          isPurchasing={purchasing}
+          purchaseMessage={message?.text ?? null}
+          closeLabel="shop"
+        />
+      </Suspense>
     </div>
   );
 }

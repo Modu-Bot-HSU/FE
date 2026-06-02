@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { getMyPage, type NftGoodsItem } from "../../apis/blockchain/blockchain";
 import { fetchMyKnowledgeSubmissions } from "../../apis/knowledge/knowledge";
 import { clearAuthTokens } from "../../apis/auth/auth";
@@ -7,7 +8,6 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { countCreateSubmissionStats } from "../../features/knowledge/knowledgeSubmissionStats";
 import { SIDEBAR_BUTTON_SAFE_TOP_CLASS } from "../../utils/layout";
 import NftGridSection from "../../components/shop/NftGridSection";
-import BuildingDetailModal from "../../components/map/BuildingDetailModal";
 import ProfileHeader from "./components/ProfileHeader";
 import DailyQStatsSection from "./components/DailyQStatsSection";
 import AccountSection from "./components/AccountSection";
@@ -15,62 +15,56 @@ import LogoutModal from "./components/LogoutModal";
 
 type DailyQStats = { received: number; pending: number; notCredited: number };
 
-const DEFAULT_STATS: DailyQStats = { received: 0, pending: 0, notCredited: 0 };
+const BuildingDetailModal = lazy(() => import("../../components/map/BuildingDetailModal"));
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const tempUser = useAuthStore((state) => state.tempUser);
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
 
-  const [balance, setBalance] = useState("");
-  const [profileName, setProfileName] = useState("");
-  const [email, setEmail] = useState("");
-  const [walletAddress, setWalletAddress] = useState("");
-  const [ownedNfts, setOwnedNfts] = useState<NftGoodsItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<NftGoodsItem | null>(null);
-  const [dailyQStats, setDailyQStats] = useState<DailyQStats>(DEFAULT_STATS);
-  const [loading, setLoading] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    Promise.allSettled([getMyPage(accessToken), fetchMyKnowledgeSubmissions()])
-      .then(([myPageResult, submissionsResult]) => {
-        if (myPageResult.status === "fulfilled") {
-          const p = myPageResult.value;
-          console.log("[ProfilePage] mypage:", p);
-          setProfileName(p.name ?? "");
-          setBalance(p.hsTokenBalance);
-          setEmail(p.email);
-          setWalletAddress(p.walletAddress);
-          setOwnedNfts(
-            Array.isArray(p.nfts)
-              ? p.nfts.map((n) => ({
-                  ...n,
-                  isSold: true,
-                  ownerName: p.name ?? tempUser?.name ?? null,
-                  owner: p.walletAddress,
-                  txHash: n.txHash ?? null,
-                }))
-              : [],
-          );
-        } else {
-          console.warn("[ProfilePage] mypage fetch failed:", myPageResult.reason);
-        }
+  const myPageQuery = useQuery({
+    queryKey: ["my-page", accessToken],
+    queryFn: () => getMyPage(accessToken),
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    retry: 1,
+  });
 
-        if (submissionsResult.status === "fulfilled") {
-          console.log("[ProfilePage] submissions:", submissionsResult.value);
-          setDailyQStats(
-            countCreateSubmissionStats(
-              Array.isArray(submissionsResult.value) ? submissionsResult.value : [],
-            ),
-          );
-        } else {
-          console.warn("[ProfilePage] submissions fetch failed:", submissionsResult.reason);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [accessToken, tempUser?.name]);
+  const submissionsQuery = useQuery({
+    queryKey: ["my-create-submissions"],
+    queryFn: () => fetchMyKnowledgeSubmissions(),
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    retry: 1,
+  });
+
+  const profileName = myPageQuery.data?.name ?? tempUser?.name ?? "";
+  const balance = myPageQuery.data?.hsTokenBalance ?? "";
+  const email = myPageQuery.data?.email ?? tempUser?.email ?? "";
+  const walletAddress = myPageQuery.data?.walletAddress ?? tempUser?.walletAddress ?? "";
+
+  const ownedNfts = useMemo<NftGoodsItem[]>(() => {
+    const p = myPageQuery.data;
+    if (!p || !Array.isArray(p.nfts)) return [];
+
+    return p.nfts.map((n) => ({
+      ...n,
+      isSold: true,
+      ownerName: p.name ?? tempUser?.name ?? null,
+      owner: p.walletAddress,
+      txHash: n.txHash ?? null,
+    }));
+  }, [myPageQuery.data, tempUser?.name]);
+
+  const dailyQStats = useMemo<DailyQStats>(() => {
+    const submissions = submissionsQuery.data;
+    return countCreateSubmissionStats(Array.isArray(submissions) ? submissions : []);
+  }, [submissionsQuery.data]);
+
+  const shouldShowNftSkeleton = myPageQuery.isPending && !myPageQuery.data;
 
   const handleLogout = () => {
     clearAuthTokens();
@@ -80,8 +74,8 @@ export default function ProfilePage() {
   return (
     <div className={`relative min-h-full bg-[#f3f3f3] px-4 pb-6 ${SIDEBAR_BUTTON_SAFE_TOP_CLASS}`}>
       <ProfileHeader
-        name={profileName || tempUser?.name || ""}
-        email={email || tempUser?.email || ""}
+        name={profileName}
+        email={email}
         balance={balance}
         buildingCount={ownedNfts.length}
       />
@@ -95,23 +89,25 @@ export default function ProfilePage() {
           onItemClick={setSelectedItem}
           badgeText="Owned"
           emptyMessage="소유한 건물이 없습니다."
-          isLoading={loading}
+          isLoading={shouldShowNftSkeleton}
         />
       </section>
 
-      <BuildingDetailModal
-        item={selectedItem}
-        balance={balance}
-        onPurchase={() => {}}
-        onClose={() => setSelectedItem(null)}
-        isPurchasing={false}
-        purchaseMessage={null}
-        closeLabel="profile"
-      />
+      <Suspense fallback={null}>
+        <BuildingDetailModal
+          item={selectedItem}
+          balance={balance}
+          onPurchase={() => {}}
+          onClose={() => setSelectedItem(null)}
+          isPurchasing={false}
+          purchaseMessage={null}
+          closeLabel="profile"
+        />
+      </Suspense>
 
       <AccountSection
-        email={email || tempUser?.email || ""}
-        walletAddress={walletAddress || tempUser?.walletAddress || ""}
+        email={email}
+        walletAddress={walletAddress}
         onLogout={() => setShowLogoutModal(true)}
       />
 
