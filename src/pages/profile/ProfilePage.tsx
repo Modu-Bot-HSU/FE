@@ -1,7 +1,7 @@
 import { lazy, Suspense, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getMyPage, type NftGoodsItem } from "../../apis/blockchain/blockchain";
+import { type NftGoodsItem } from "../../apis/blockchain/blockchain";
 import { fetchMyKnowledgeSubmissions } from "../../apis/knowledge/knowledge";
 import { clearAuthTokens } from "../../apis/auth/auth";
 import { useAuthStore } from "../../store/useAuthStore";
@@ -12,6 +12,7 @@ import ProfileHeader from "./components/ProfileHeader";
 import DailyQStatsSection from "./components/DailyQStatsSection";
 import AccountSection from "./components/AccountSection";
 import LogoutModal from "./components/LogoutModal";
+import { useMyPageQuery } from "../../features/profile/useMyPageQuery";
 
 type DailyQStats = { received: number; pending: number; notCredited: number };
 
@@ -25,20 +26,18 @@ export default function ProfilePage() {
   const [selectedItem, setSelectedItem] = useState<NftGoodsItem | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const myPageQuery = useQuery({
-    queryKey: ["my-page", accessToken],
-    queryFn: () => getMyPage(accessToken),
-    staleTime: 60_000,
-    gcTime: 5 * 60_000,
-    retry: 1,
-  });
+  const myPageQuery = useMyPageQuery(accessToken);
 
   const submissionsQuery = useQuery({
     queryKey: ["my-create-submissions"],
     queryFn: () => fetchMyKnowledgeSubmissions(),
     staleTime: 30_000,
     gcTime: 5 * 60_000,
-    retry: 1,
+    retry: (failureCount, error) => {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status && status >= 500) return false;
+      return failureCount < 1;
+    },
   });
 
   const profileName = myPageQuery.data?.name ?? tempUser?.name ?? "";
