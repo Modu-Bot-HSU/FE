@@ -4,6 +4,7 @@ import { useForm } from "../../../hooks/useForm";
 import { buildPersonalSignPayload, getNonce, normalizeWalletAddress } from "../../../apis/auth/auth";
 import { alertEthereumFlowError } from "./ethereumErrors";
 import { useLoginMutation } from "./useLoginMutation";
+import { ethereumRequest } from "../wallet/ethereumProvider";
 
 export type LoginUiStep = "wallet" | "confirm";
 
@@ -19,13 +20,9 @@ export const useWalletLogin = () => {
 
   const connectMetaMask = async () => {
     try {
-      if (!window.ethereum) {
-        alert("메타마스크 설치가 필요합니다.");
-        return;
-      }
-      const accounts = (await window.ethereum.request({
-        method: "eth_requestAccounts",
-      })) as string[];
+      const accounts = (await ethereumRequest<string[]>(
+        "eth_requestAccounts",
+      )) as string[];
       const raw = (accounts[0] ?? "").trim();
       if (!raw) {
         alert("메타마스크 계정을 찾을 수 없습니다.");
@@ -45,14 +42,12 @@ export const useWalletLogin = () => {
     }
     setIsNavigatingToConfirm(true);
     try {
-      if (!window.ethereum) {
-        alert("메타마스크 설치가 필요합니다.");
+      const accounts = await ethereumRequest<string[]>("eth_requestAccounts");
+      const raw = (accounts[0] ?? "").trim();
+      if (!raw) {
+        alert("메타마스크 계정을 찾을 수 없습니다.");
         return;
       }
-      const accounts = (await window.ethereum.request({
-        method: "eth_requestAccounts",
-      })) as string[];
-      const raw = (accounts[0] ?? "").trim();
       const active = normalizeWalletAddress(raw);
       if (!active) {
         alert("메타마스크 계정을 찾을 수 없습니다. 계정 연결 후 다시 시도해주세요.");
@@ -76,10 +71,7 @@ export const useWalletLogin = () => {
     try {
       const { nonce } = await getNonce({ walletAddress: active });
       const message = buildPersonalSignPayload(nonce);
-      const signature = (await window.ethereum!.request({
-        method: "personal_sign",
-        params: [message, signingAddressRaw],
-      })) as string;
+      const signature = await ethereumRequest<string>("personal_sign", [message, signingAddressRaw]);
       loginMutation.mutate({ walletAddress: active, signature });
     } catch (e) {
       console.error(e);

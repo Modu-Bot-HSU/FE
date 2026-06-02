@@ -19,7 +19,7 @@ export default function AccountSection({ email, walletAddress, onLogout }: Props
         onClick={onLogout}
         className="mt-4 w-full rounded-xl border border-[#C0392B] py-3 text-[14px] font-medium text-[#C0392B] active:bg-rose-50"
       >
-        로그아웃
+        Sign Out
       </button>
     </section>
   );

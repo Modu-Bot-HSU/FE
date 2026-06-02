@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import logoUrl from "../../assets/logo.svg";
-import { getMyPage } from "../../apis/blockchain/blockchain";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useMyPageQuery } from "../../features/profile/useMyPageQuery";
 
 type Props = {
   open: boolean;
@@ -27,26 +27,9 @@ const menuSections = [
 export default function HomeSidebar({ open, onClose }: Props) {
   const asideRef = useRef<HTMLElement | null>(null);
   const tempUser = useAuthStore((state) => state.tempUser);
-  const [userEmail, setUserEmail] = useState("");
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
-
-  useEffect(() => {
-    setUserEmail(tempUser?.email ?? "");
-  }, [tempUser?.email]);
-
-  useEffect(() => {
-    if (!accessToken) return;
-
-    getMyPage(accessToken)
-      .then((data) => {
-        if (typeof data.email === "string") {
-          setUserEmail(data.email);
-        }
-      })
-      .catch(() => {
-        // no-op: fallback to tempUser email
-      });
-  }, [accessToken]);
+  const myPageQuery = useMyPageQuery(accessToken);
+  const userEmail = myPageQuery.data?.email ?? tempUser?.email ?? "";
 
   useEffect(() => {
     if (open) return;

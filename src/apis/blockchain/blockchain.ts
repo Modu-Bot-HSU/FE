@@ -1,5 +1,6 @@
 import { axiosInstance } from "../axios";
 import { BrowserProvider, Contract, parseUnits } from "ethers";
+import { ethereumRequest, getEthereumProvider } from "../../features/auth/wallet/ethereumProvider";
 
 export interface NftGoodsItem {
   index: number;
@@ -110,23 +111,18 @@ const normalizeNftGoodsItem = (item: RawNftGoodsItem): NftGoodsItem => ({
 export const ensureNftPurchaseApproval = async (
   requiredAmount: string | number,
 ): Promise<void> => {
-  if (!window.ethereum) {
-    throw new Error("MetaMask를 설치해주세요.");
-  }
-
   if (!HS_TOKEN_ADDRESS || !HS_NFT_ADDRESS) {
     throw new Error("환경변수(VITE_HS_TOKEN_ADDRESS, VITE_HS_NFT_ADDRESS)를 설정해주세요.");
   }
 
-  await window.ethereum.request({ method: "eth_requestAccounts" });
+  await ethereumRequest("eth_requestAccounts");
 
-  const currentChainHex = (await window.ethereum.request({ method: "eth_chainId" })) as string;
+  const currentChainHex = await ethereumRequest<string>("eth_chainId");
   if (Number.parseInt(currentChainHex, 16) !== POLYGON_AMOY_CHAIN_ID) {
     try {
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: toChainHex(POLYGON_AMOY_CHAIN_ID) }],
-      });
+      await ethereumRequest("wallet_switchEthereumChain", [
+        { chainId: toChainHex(POLYGON_AMOY_CHAIN_ID) },
+      ]);
     } catch (error) {
       const code =
         typeof error === "object" && error !== null && "code" in error
@@ -134,17 +130,14 @@ export const ensureNftPurchaseApproval = async (
           : undefined;
 
       if (code === 4902 || code === "4902") {
-        await window.ethereum.request({
-          method: "wallet_addEthereumChain",
-          params: [POLYGON_AMOY_PARAMS],
-        });
+        await ethereumRequest("wallet_addEthereumChain", [POLYGON_AMOY_PARAMS]);
       } else {
         throw error;
       }
     }
   }
 
-  const provider = new BrowserProvider(window.ethereum);
+  const provider = new BrowserProvider(await getEthereumProvider());
   const signer = await provider.getSigner();
   const tokenContract = new Contract(HS_TOKEN_ADDRESS, HS_TOKEN_ABI, signer);
   const requiredAllowance = parseUnits(String(requiredAmount), HS_TOKEN_DECIMALS);
