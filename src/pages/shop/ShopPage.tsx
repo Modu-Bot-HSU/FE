@@ -1,14 +1,17 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import {
   ensureNftPurchaseApproval,
   purchaseNft,
   type NftGoodsItem,
 } from "../../apis/blockchain/blockchain";
 import { AxiosError } from "axios";
+import { normalizeWalletAddress } from "../../apis/auth/auth";
 import NftGridSection from "../../components/shop/NftGridSection";
 import BalancePill from "../../components/common/BalancePill";
 import { isUserRejectedEthereumAction } from "../../features/auth/login/ethereumErrors";
-import { useCampusAssetsQuery } from "../../features/market/useCampusAssetsQuery";
+import { useMyPageQuery } from "../../features/profile/useMyPageQuery";
+import { useCampusAssetsQuery } from "../../features/shop/useCampusAssetsQuery.ts";
+import { useAuthStore } from "../../store/useAuthStore";
 
 const BuildingDetailModal = lazy(() => import("../../components/map/BuildingDetailModal.tsx"));
 
@@ -18,12 +21,20 @@ export default function ShopPage() {
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   const accessToken = localStorage.getItem("accessToken") ?? undefined;
+  const tempUser = useAuthStore((state) => state.tempUser);
   const campusAssetsQuery = useCampusAssetsQuery(accessToken);
+  const myPageQuery = useMyPageQuery(accessToken);
   const goods = campusAssetsQuery.data?.goods ?? [];
   const balance = campusAssetsQuery.data?.balance ?? "0";
   const loading = campusAssetsQuery.isPending && !campusAssetsQuery.data;
+  const currentWalletAddress = useMemo(() => {
+    const raw = myPageQuery.data?.walletAddress ?? tempUser?.walletAddress ?? "";
+    return raw ? normalizeWalletAddress(raw) : "";
+  }, [myPageQuery.data?.walletAddress, tempUser?.walletAddress]);
 
-  const owned = goods.filter((g) => g.isSold);
+  const owned = goods.filter(
+    (g) => g.isSold && currentWalletAddress && normalizeWalletAddress(g.owner ?? "") === currentWalletAddress,
+  );
   const available = goods.filter((g) => !g.isSold);
 
   const handlePurchase = async () => {
