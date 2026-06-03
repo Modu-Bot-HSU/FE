@@ -17,6 +17,7 @@ export default function AnimatedBottomSheet({
 }: AnimatedBottomSheetProps) {
   const [shouldRender, setShouldRender] = useState(open);
   const [visible, setVisible] = useState(false);
+  const [frameScrollTop, setFrameScrollTop] = useState(0);
   const closeTimeoutRef = useRef<number | null>(null);
   const openRaf1Ref = useRef<number | null>(null);
   const openRaf2Ref = useRef<number | null>(null);
@@ -71,19 +72,45 @@ export default function AnimatedBottomSheet({
     };
   }, [open, durationMs, onExited]);
 
+  useEffect(() => {
+    if (!shouldRender) return;
+
+    const frameEl = document.querySelector(".mobile-frame") as HTMLElement | null;
+    if (!frameEl) {
+      setFrameScrollTop(0);
+      return;
+    }
+
+    const syncScrollOffset = () => {
+      setFrameScrollTop(frameEl.scrollTop);
+    };
+
+    syncScrollOffset();
+    frameEl.addEventListener("scroll", syncScrollOffset, { passive: true });
+    window.addEventListener("resize", syncScrollOffset);
+
+    return () => {
+      frameEl.removeEventListener("scroll", syncScrollOffset);
+      window.removeEventListener("resize", syncScrollOffset);
+    };
+  }, [shouldRender]);
+
   if (!shouldRender) return null;
 
   return (
-    <>
+    <div
+      className="fixed inset-0 z-[79]"
+      style={frameScrollTop ? { transform: `translateY(${frameScrollTop}px)` } : undefined}
+    >
       <div
-        className={`fixed inset-0 z-[79] bg-black/25 transition-opacity duration-300 ${
+        className={`absolute inset-0 z-[1] bg-black/25 transition-opacity duration-300 ${
           visible ? "opacity-100" : "opacity-0"
         }`}
         onClick={onBackdropClick}
       />
 
       <div
-        className={`pointer-events-none fixed inset-0 z-[80] flex items-end justify-center transition-all duration-300 ${
+        className={`pointer-events-none absolute inset-0 z-[2] flex items-end justify-center transition-all duration-300 ${
           visible ? "opacity-100" : "opacity-0"
         }`}
       >
@@ -95,6 +122,6 @@ export default function AnimatedBottomSheet({
           {children}
         </div>
       </div>
-    </>
+    </div>
   );
 }
