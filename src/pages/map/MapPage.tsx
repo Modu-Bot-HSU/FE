@@ -5,7 +5,7 @@ import {
 } from "../../apis/blockchain/blockchain";
 import CampusScene from "../../components/map/CampusScene.tsx";
 import { isUserRejectedEthereumAction } from "../../features/auth/login/ethereumErrors";
-import { useCampusAssetsQuery } from "../../features/market/useCampusAssetsQuery";
+import { useCampusAssetsQuery } from "../../features/shop/useCampusAssetsQuery.ts";
 
 const BuildingDetailModal = lazy(() => import("../../components/map/BuildingDetailModal.tsx"));
 
