@@ -65,6 +65,11 @@ let evmClientPromise: Promise<MetamaskConnectEVM> | null = null;
 
 const shouldUseMetaMaskConnect = () => import.meta.env.VITE_USE_METAMASK_CONNECT !== "false";
 
+const isMobileWeb = () => {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+};
+
 const createClient = async () => {
   const { createEVMClient } = await import("@metamask/connect-evm");
 
@@ -77,8 +82,11 @@ const createClient = async () => {
       supportedNetworks: SUPPORTED_NETWORKS,
     },
     ui: {
-      preferExtension: true,
-      showInstallModal: true,
+      preferExtension: !isMobileWeb(),
+      showInstallModal: !isMobileWeb(),
+    },
+    mobile: {
+      useDeeplink: true,
     },
   });
 };
@@ -176,4 +184,48 @@ export const ethereumRequest = async <T = unknown>(
     : await getEthereumProvider();
 
   return (await provider.request({ method, params })) as T;
+};
+
+export const connectAndSignPersonal = async (
+  message: string,
+  expectedAddress?: string,
+): Promise<{ account: string; signature: string }> => {
+  const client = await getMetaMaskConnectClient();
+
+  if (client) {
+    const { accounts, signature } = await client.connectAndSign({
+      message,
+      chainIds: [DEFAULT_CHAIN_HEX],
+    });
+
+    const account = String(accounts[0] ?? "").trim();
+    if (!account) {
+      throw new Error("메타마스크 계정을 찾을 수 없습니다.");
+    }
+
+    if (expectedAddress && account.toLowerCase() !== expectedAddress.toLowerCase()) {
+      throw new Error("입력한 지갑 주소와 메타마스크 선택 계정이 다릅니다.");
+    }
+
+    return { account, signature };
+  }
+
+  const provider = await getEthereumProvider();
+  const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
+  const account = String(accounts[0] ?? "").trim();
+
+  if (!account) {
+    throw new Error("메타마스크 계정을 찾을 수 없습니다.");
+  }
+
+  if (expectedAddress && account.toLowerCase() !== expectedAddress.toLowerCase()) {
+    throw new Error("입력한 지갑 주소와 메타마스크 선택 계정이 다릅니다.");
+  }
+
+  const signature = (await provider.request({
+    method: "personal_sign",
+    params: [message, account],
+  })) as string;
+
+  return { account, signature };
 };
