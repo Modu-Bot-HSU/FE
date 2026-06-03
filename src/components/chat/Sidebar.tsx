@@ -66,6 +66,7 @@ export default function HomeSidebar({ open, onClose }: Props) {
                   <li key={item.label}>
                     <NavLink
                       to={item.to}
+                      end={item.to === "/campus"}
                       onClick={onClose}
                       className={({ isActive }) =>
                         `flex items-center rounded-2xl px-3 py-2.5 text-sm font-semibold text-black ${
