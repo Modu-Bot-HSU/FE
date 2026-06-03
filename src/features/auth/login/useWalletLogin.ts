@@ -4,6 +4,7 @@ import { useForm } from "../../../hooks/useForm";
 import { buildPersonalSignPayload, getNonce, normalizeWalletAddress } from "../../../apis/auth/auth";
 import { alertEthereumFlowError } from "./ethereumErrors";
 import { useLoginMutation } from "./useLoginMutation";
+import { connectAndSignPersonal, ethereumRequest } from "../wallet/ethereumProvider";
 
 export type LoginUiStep = "wallet" | "confirm";
 
@@ -18,13 +19,9 @@ export const useWalletLogin = () => {
 
   const connectMetaMask = async () => {
     try {
-      if (!window.ethereum) {
-        alert("메타마스크 설치가 필요합니다.");
-        return;
-      }
-      const accounts = (await window.ethereum.request({
-        method: "eth_requestAccounts",
-      })) as string[];
+      const accounts = (await ethereumRequest<string[]>(
+        "eth_requestAccounts",
+      )) as string[];
       const raw = (accounts[0] ?? "").trim();
       if (!raw) {
         alert("메타마스크 계정을 찾을 수 없습니다.");
@@ -42,41 +39,25 @@ export const useWalletLogin = () => {
       alert("올바른 지갑 주소를 입력해주세요.");
       return;
     }
-    try {
-      if (!window.ethereum) {
-        alert("메타마스크 설치가 필요합니다.");
-        return;
-      }
-      const accounts = (await window.ethereum.request({
-        method: "eth_requestAccounts",
-      })) as string[];
-      const raw = (accounts[0] ?? "").trim();
-      const active = normalizeWalletAddress(raw);
-      if (!active) {
-        alert("메타마스크 계정을 찾을 수 없습니다. 계정 연결 후 다시 시도해주세요.");
-        return;
-      }
-      if (active !== target) {
-        alert("입력한 지갑 주소와 메타마스크 선택 계정이 다릅니다.");
-        return;
-      }
-      setSigningAddressRaw(raw);
-      setStep("confirm");
-    } catch (e) {
-      alertEthereumFlowError(e);
-    }
+
+    setSigningAddressRaw(target);
+    setStep("confirm");
   };
 
   const confirmLogin = async () => {
     const active = normalizeWalletAddress(signingAddressRaw);
+
+    if (!active) {
+      alert("올바른 지갑 주소를 입력해주세요.");
+      setStep("wallet");
+      return;
+    }
+
     try {
       const { nonce } = await getNonce({ walletAddress: active });
       const message = buildPersonalSignPayload(nonce);
-      const signature = (await window.ethereum!.request({
-        method: "personal_sign",
-        params: [message, signingAddressRaw],
-      })) as string;
-      loginMutation.mutate({ walletAddress: active, signature });
+      const { account, signature } = await connectAndSignPersonal(message, active);
+      loginMutation.mutate({ walletAddress: normalizeWalletAddress(account), signature });
     } catch (e) {
       console.error(e);
       alertEthereumFlowError(e);
@@ -92,6 +73,7 @@ export const useWalletLogin = () => {
     goToConfirm,
     confirmLogin,
     isPending: loginMutation.isPending,
+    isNavigatingToConfirm: loginMutation.isPending,
     displayAddress: normalizedInput(),
     navigate,
   };

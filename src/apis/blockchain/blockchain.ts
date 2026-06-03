@@ -1,4 +1,6 @@
 import { axiosInstance } from "../axios";
+import { BrowserProvider, Contract, parseUnits } from "ethers";
+import { ethereumRequest, getEthereumProvider } from "../../features/auth/wallet/ethereumProvider";
 
 export interface NftGoodsItem {
   index: number;
@@ -10,7 +12,22 @@ export interface NftGoodsItem {
   isSold: boolean;
   txHash: string | null;
   owner: string | null;
+  ownerName?: string | null;
 }
+
+type RawNftGoodsOwner =
+  | string
+  | null
+  | {
+      name?: string | null;
+      walletAddress?: string | null;
+      [key: string]: unknown;
+    };
+
+type RawNftGoodsItem = Omit<NftGoodsItem, "owner" | "txHash"> & {
+  owner: RawNftGoodsOwner;
+  txHash: string | null;
+};
 
 export interface PurchaseNftRequest {
   index: number;
@@ -29,6 +46,29 @@ export interface HsBalanceResponse {
 
 export type ApiObjectResponse = Record<string, unknown>;
 
+const HS_TOKEN_ADDRESS = import.meta.env.VITE_HS_TOKEN_ADDRESS;
+const HS_NFT_ADDRESS = import.meta.env.VITE_HS_NFT_ADDRESS;
+const POLYGON_AMOY_CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID ?? "80002");
+const HS_TOKEN_DECIMALS = Number(import.meta.env.VITE_HS_TOKEN_DECIMALS ?? "18");
+
+const HS_TOKEN_ABI = [
+  "function approve(address spender, uint256 value) returns (bool)",
+];
+
+const toChainHex = (chainId: number) => `0x${chainId.toString(16)}`;
+
+const POLYGON_AMOY_PARAMS = {
+  chainId: toChainHex(POLYGON_AMOY_CHAIN_ID),
+  chainName: "Polygon Amoy Testnet",
+  nativeCurrency: {
+    name: "POL",
+    symbol: "POL",
+    decimals: 18,
+  },
+  rpcUrls: ["https://rpc-amoy.polygon.technology"],
+  blockExplorerUrls: ["https://amoy.polygonscan.com"],
+};
+
 const createAuthConfig = (accessToken?: string) => {
   const token = accessToken?.trim();
   if (!token) return undefined;
@@ -38,6 +78,71 @@ const createAuthConfig = (accessToken?: string) => {
       Authorization: `Bearer ${token}`,
     },
   };
+};
+
+const normalizeOwnerAddress = (owner: RawNftGoodsOwner): string | null => {
+  if (typeof owner === "string") return owner;
+  if (owner && typeof owner === "object" && typeof owner.walletAddress === "string") {
+    return owner.walletAddress;
+  }
+  return null;
+};
+
+const normalizeOwnerName = (owner: RawNftGoodsOwner): string | null => {
+  if (owner && typeof owner === "object" && typeof owner.name === "string") {
+    return owner.name;
+  }
+  return null;
+};
+
+const normalizeNftGoodsItem = (item: RawNftGoodsItem): NftGoodsItem => ({
+  index: item.index,
+  name: item.name,
+  description: item.description,
+  price: item.price,
+  imageUrl: item.imageUrl,
+  metadataUrl: item.metadataUrl,
+  isSold: item.isSold,
+  txHash: item.txHash ?? null,
+  owner: normalizeOwnerAddress(item.owner),
+  ownerName: normalizeOwnerName(item.owner),
+});
+
+export const ensureNftPurchaseApproval = async (
+  requiredAmount: string | number,
+): Promise<void> => {
+  if (!HS_TOKEN_ADDRESS || !HS_NFT_ADDRESS) {
+    throw new Error("환경변수(VITE_HS_TOKEN_ADDRESS, VITE_HS_NFT_ADDRESS)를 설정해주세요.");
+  }
+
+  await ethereumRequest("eth_requestAccounts");
+
+  const currentChainHex = await ethereumRequest<string>("eth_chainId");
+  if (Number.parseInt(currentChainHex, 16) !== POLYGON_AMOY_CHAIN_ID) {
+    try {
+      await ethereumRequest("wallet_switchEthereumChain", [
+        { chainId: toChainHex(POLYGON_AMOY_CHAIN_ID) },
+      ]);
+    } catch (error) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? (error as { code?: number | string }).code
+          : undefined;
+
+      if (code === 4902 || code === "4902") {
+        await ethereumRequest("wallet_addEthereumChain", [POLYGON_AMOY_PARAMS]);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  const provider = new BrowserProvider(await getEthereumProvider());
+  const signer = await provider.getSigner();
+  const tokenContract = new Contract(HS_TOKEN_ADDRESS, HS_TOKEN_ABI, signer);
+  const requiredAllowance = parseUnits(String(requiredAmount), HS_TOKEN_DECIMALS);
+  const approveTx = await tokenContract.approve(HS_NFT_ADDRESS, requiredAllowance);
+  await approveTx.wait();
 };
 
 const MOCK_NFT_GOODS: NftGoodsItem[] = [
@@ -62,6 +167,7 @@ const MOCK_NFT_GOODS: NftGoodsItem[] = [
     isSold: true,
     txHash: "0xabcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234",
     owner: "0xABCD...1234",
+    ownerName: "홍길동",
   },
   {
     index: 2,
@@ -164,17 +270,44 @@ const MOCK_NFT_GOODS: NftGoodsItem[] = [
   },
 ];
 
-const USE_MOCK = true;
+const USE_MOCK = false;
+
+export interface MyPageNftItem {
+  index: number;
+  name: string;
+  description: string;
+  price: string;
+  imageUrl: string;
+  metadataUrl: string;
+  txHash: string;
+}
+
+export interface MyPageResponse {
+  name?: string;
+  email: string;
+  walletAddress: string;
+  hsTokenBalance: string;
+  nftCount: number;
+  nfts: MyPageNftItem[];
+}
+
+export const getMyPage = async (accessToken?: string): Promise<MyPageResponse> => {
+  const { data } = await axiosInstance.get<MyPageResponse>(
+    "/users/mypage",
+    createAuthConfig(accessToken),
+  );
+  return data;
+};
 
 export const getNftGoods = async (accessToken?: string): Promise<NftGoodsItem[]> => {
   if (USE_MOCK) {
     return new Promise((resolve) => setTimeout(() => resolve(MOCK_NFT_GOODS), 300));
   }
-  const { data } = await axiosInstance.get<NftGoodsItem[]>(
+  const { data } = await axiosInstance.get<RawNftGoodsItem[]>(
     "/blockchain/nft/goods",
     createAuthConfig(accessToken),
   );
-  return data;
+  return Array.isArray(data) ? data.map(normalizeNftGoodsItem) : [];
 };
 
 export const purchaseNft = async (

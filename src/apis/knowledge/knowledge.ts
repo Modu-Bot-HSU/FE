@@ -1,9 +1,11 @@
 import { API_BASE_URL, getBearerAuthHeaders, parseApiResponse } from "../httpClient";
 import type {
   KnowledgeDeleteBody,
+  KnowledgeSubmissionItem,
   KnowledgeListParams,
   KnowledgeListResponse,
   KnowledgeMutationResponse,
+  KnowledgeSubmissionListParams,
   KnowledgeSubmitBody,
   KnowledgeUpdateBody,
 } from "./types";
@@ -13,6 +15,13 @@ function knowledgeListQuery(params: KnowledgeListParams): string {
   if (params.category) search.set("category", params.category);
   if (params.limit != null) search.set("limit", String(params.limit));
   if (params.offset) search.set("offset", params.offset);
+  const q = search.toString();
+  return q ? `?${q}` : "";
+}
+
+function submissionListQuery(params: KnowledgeSubmissionListParams): string {
+  const search = new URLSearchParams();
+  if (params.status) search.set("status", params.status);
   const q = search.toString();
   return q ? `?${q}` : "";
 }
@@ -65,4 +74,23 @@ export async function requestKnowledgeDelete(
     body: JSON.stringify(body),
   });
   return parseApiResponse<KnowledgeMutationResponse>(response);
+}
+
+/** GET /knowledge/my-submissions */
+export async function fetchMyKnowledgeSubmissions(
+  params: KnowledgeSubmissionListParams = {},
+): Promise<KnowledgeSubmissionItem[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/knowledge/my-submissions${submissionListQuery(params)}`,
+    {
+      method: "GET",
+      headers: { ...getBearerAuthHeaders() },
+    },
+  );
+  return parseApiResponse<KnowledgeSubmissionItem[]>(response);
+}
+
+/** @deprecated use fetchMyKnowledgeSubmissions */
+export async function fetchMySubmissions(): Promise<KnowledgeSubmissionItem[]> {
+  return fetchMyKnowledgeSubmissions();
 }

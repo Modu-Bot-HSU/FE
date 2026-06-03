@@ -1,4 +1,9 @@
-export const API_BASE_URL = "https://modubot.shop";
+const DEFAULT_PROD_API_BASE_URL = "https://modubot.shop";
+
+const configuredApiBaseUrl = import.meta.env.VITE_API_URL?.trim();
+
+export const API_BASE_URL =
+  configuredApiBaseUrl ?? (import.meta.env.PROD ? DEFAULT_PROD_API_BASE_URL : "/api");
 
 export async function parseApiResponse<TResponse>(response: Response): Promise<TResponse> {
   let body: unknown = null;

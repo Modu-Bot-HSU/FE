@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, CSSProperties } from "react";
 import { AUTH } from "./authTheme";
 
 type Variant = "primary" | "secondary" | "ghost";
@@ -14,10 +14,11 @@ export default function AuthButton({
   className = "",
   disabled,
   children,
+  style: userStyle,
   ...rest
 }: Props) {
   const base =
-    "rounded-[10px] font-semibold py-3.5 px-4 transition-opacity disabled:opacity-45 disabled:cursor-not-allowed";
+    "rounded-[10px] font-semibold py-3.5 px-4 min-h-[52px] transition-opacity disabled:opacity-45 disabled:cursor-not-allowed";
   const width = fullWidth ? "w-full" : "";
   const styles: Record<Variant, string> = {
     primary: "text-white",
@@ -25,12 +26,12 @@ export default function AuthButton({
     ghost: "bg-transparent text-gray-600 underline-offset-2",
   };
 
-  const style =
+  const style: CSSProperties =
     variant === "primary"
-      ? { backgroundColor: AUTH.primary }
+      ? { backgroundColor: AUTH.primary, ...userStyle }
       : variant === "secondary"
-        ? { borderColor: AUTH.primary, color: AUTH.primary }
-        : {};
+        ? { borderColor: AUTH.primary, color: AUTH.primary, ...userStyle }
+        : { ...userStyle };
 
   return (
     <button

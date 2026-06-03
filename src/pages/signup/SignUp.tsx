@@ -23,8 +23,8 @@ const SignUp = () => {
           onEmailChange={s.onEmailChange}
           onNameChange={s.setName}
           onSendCode={async () => {
-            await s.handleSendVerificationCode();
-            setStep(2);
+            const ok = await s.handleSendVerificationCode();
+            if (ok) setStep(2);
           }}
           sendPending={s.sendCodeMutation.isPending}
           onBack={() => setStep(1)}
@@ -36,7 +36,6 @@ const SignUp = () => {
           email={s.email.trim()}
           code={s.code}
           onCodeChange={s.setCode}
-          countdownLabel={s.countdownLabel}
           remainingSeconds={s.remainingSeconds}
           resendPending={s.sendCodeMutation.isPending}
           verifyPending={s.verifyCodeMutation.isPending}
@@ -44,22 +43,22 @@ const SignUp = () => {
             await s.handleSendVerificationCode();
           }}
           onVerify={async () => {
-            await s.handleVerifyCode();
-            setStep(3);
+            const ok = await s.handleVerifyCode();
+            if (ok) setStep(3);
           }}
           onBack={() => setStep(1)}
         />
       ) : null}
 
-      {step === 3 ? (
+      {step === 3 && s.isEmailVerified && s.walletSessionSeconds > 0 ? (
         <SignUpStepWallet
           email={s.email.trim()}
           walletAddress={s.walletAddress}
           onWalletChange={(e) => s.setWalletAddress(e.target.value)}
           onMetaMask={s.connectMetaMaskToForm}
           onSubmit={async () => {
-            await s.handleComplete();
-            setStep(4);
+            const ok = await s.handleComplete();
+            if (ok) setStep(4);
           }}
           onBack={() => setStep(2)}
           isPending={s.isPending}

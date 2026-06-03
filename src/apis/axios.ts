@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_BASE_URL } from "./httpClient";
 import {
   clearAuthTokens,
   extractAccessToken,
@@ -6,7 +7,7 @@ import {
 } from "./auth/auth";
 
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "/api",
+  baseURL: API_BASE_URL,
 });
 
 axiosInstance.interceptors.request.use((config) => {
@@ -27,8 +28,7 @@ const refreshTokens = async (): Promise<string | null> => {
     return null;
   }
 
-  const baseURL = import.meta.env.VITE_API_URL ?? "/api";
-  const response = await fetch(`${baseURL}/auth/refresh`, {
+  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${refreshToken}`,

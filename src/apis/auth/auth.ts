@@ -1,9 +1,13 @@
 import { API_BASE_URL, getBearerAuthHeaders, getRefreshBearerHeaders, parseApiResponse } from "../httpClient";
 
 export interface SignUpRequest {
-  walletAddress: string;
   name: string;
   email: string;
+}
+
+export interface SignUpWalletRequest {
+  email: string;
+  walletAddress: string;
 }
 
 export interface EmailVerificationRequest {
@@ -19,12 +23,10 @@ export interface MessageResponse {
   message: string;
 }
 
-/** POST /auth/signup/request — nonce only until /auth/signin/verify */
+/*유저 생성 후 로그인용 nonce */
 export interface SignUpNonceResponse {
   nonce: string;
 }
-
-/** @deprecated use SignUpNonceResponse; verify returns login shape */
 export interface SignUpResponse {
   nonce?: number | string;
   accessToken?: string;
@@ -129,15 +131,35 @@ const postWithFetch = async <TRequest, TResponse>(
 
 // --- API 함수들 ---
 
-// 회원가입 요청 (nonce 발급) → 서명 후 login(/auth/signin/verify) 호출
-export const signup = async (signUpData: SignUpRequest): Promise<SignUpNonceResponse> => {
-  const payload: SignUpRequest = {
+/** Step 1: 이메일 인증 코드 발송 */
+export const signupRequest = async (signUpData: SignUpRequest): Promise<MessageResponse> => {
+  return postWithFetch<SignUpRequest, MessageResponse>("/auth/signup/request", {
     name: signUpData.name.trim(),
     email: signUpData.email.trim().toLowerCase(),
-    walletAddress: normalizeWalletAddress(signUpData.walletAddress),
-  };
-  return postWithFetch<SignUpRequest, SignUpNonceResponse>("/auth/signup/request", payload);
+  });
 };
+
+/* Step 2: 인증 코드 검증 (nonce 미반환) */
+export const signupVerify = async (
+  requestData: EmailCodeVerificationRequest,
+): Promise<MessageResponse> => {
+  return postWithFetch<EmailCodeVerificationRequest, MessageResponse>("/auth/signup/verify", {
+    email: requestData.email.trim().toLowerCase(),
+    code: requestData.code.trim(),
+  });
+};
+
+/*Step 3 */
+export const signupWallet = async (
+  requestData: SignUpWalletRequest,
+): Promise<SignUpNonceResponse> => {
+  return postWithFetch<SignUpWalletRequest, SignUpNonceResponse>("/auth/signup/wallet", {
+    email: requestData.email.trim().toLowerCase(),
+    walletAddress: normalizeWalletAddress(requestData.walletAddress),
+  });
+};
+
+export const signup = signupRequest;
 
 // 이메일 인증 코드 발송
 export const sendEmailVerificationCode = async (

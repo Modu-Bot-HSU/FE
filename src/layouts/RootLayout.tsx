@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import MobileLayout from "../components/common/MobileLayout.tsx";
 import HomeSidebar from "../components/chat/Sidebar.tsx";
 
 export default function RootLayout() {
@@ -9,12 +8,12 @@ export default function RootLayout() {
   const isAuthPage = pathname.startsWith("/auth");
 
   return (
-    <MobileLayout>
+    <>
       {!isAuthPage && (
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}
-          className="absolute left-5 top-6 z-30 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm border border-gray-100 text-[#001F3F]"
+          className="absolute left-5 top-6 z-30 flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-100 bg-white text-[#001F3F] shadow-sm"
           aria-label="Open menu"
         >
           <span className="flex flex-col gap-1">
