@@ -29,3 +29,9 @@ export function getBearerAuthHeaders(): Record<string, string> {
   if (!token) return {};
   return { Authorization: `Bearer ${token}` };
 }
+
+export function getRefreshBearerHeaders(): Record<string, string> {
+  const token = localStorage.getItem("refreshToken");
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
