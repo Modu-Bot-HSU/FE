@@ -1,10 +1,10 @@
 import AuthPageLayout from "../common/AuthPageLayout";
 import FormActionButton from "../common/FormActionButton";
 import CustomInput from "../common/Input";
-import { useWalletLogin } from "../../pages/login/useWalletLogin";
+import { useWalletLogin } from "../../features/auth/login/useWalletLogin";
 
 const LoginPage = () => {
-  const { walletAddress, handleWalletChange, handleLoginFlow, isPending, navigate } =
+  const { walletAddress, handleWalletChange, connectMetaMask, isPending, navigate } =
     useWalletLogin();
 
   return (
@@ -19,7 +19,7 @@ const LoginPage = () => {
         메타마스크에 보이는 주소처럼 대소문자가 섞여 있어도 정상(체크섬)이며, 같은 지갑입니다.
       </p>
 
-      <FormActionButton onClick={handleLoginFlow} disabled={isPending} tone="orange">
+      <FormActionButton onClick={() => void connectMetaMask()} disabled={isPending} tone="orange">
         {isPending ? "로그인 중..." : "메타마스크로 로그인"}
       </FormActionButton>
 

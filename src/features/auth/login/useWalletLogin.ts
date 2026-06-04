@@ -5,6 +5,7 @@ import { buildPersonalSignPayload, getNonce, normalizeWalletAddress } from "../.
 import { alertEthereumFlowError } from "./ethereumErrors";
 import { useLoginMutation } from "./useLoginMutation";
 import { connectAndSignPersonal, ethereumRequest } from "../wallet/ethereumProvider";
+import { hasInjectedEthereum, isMobileWeb, openMetaMaskDappDeepLink } from "./mobile";
 
 export type LoginUiStep = "wallet" | "confirm";
 
@@ -20,6 +21,11 @@ export const useWalletLogin = () => {
   const normalizedInput = () => normalizeWalletAddress(values.walletAddress.trim());
 
   const connectMetaMask = useCallback(async () => {
+    if (isMobileWeb() && !hasInjectedEthereum()) {
+      openMetaMaskDappDeepLink();
+      return;
+    }
+
     try {
       const accounts = (await ethereumRequest<string[]>(
         "eth_requestAccounts",
