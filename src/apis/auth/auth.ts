@@ -1,4 +1,4 @@
-import { API_BASE_URL, getBearerAuthHeaders, parseApiResponse } from "../httpClient";
+import { API_BASE_URL, getBearerAuthHeaders, getRefreshBearerHeaders, parseApiResponse } from "../httpClient";
 
 export interface SignUpRequest {
   name: string;
@@ -203,12 +203,17 @@ export const login = async (
 };
 
 export const refreshAccessToken = async (): Promise<RefreshResponse> => {
+  const headers = getRefreshBearerHeaders();
+  if (!headers.Authorization) {
+    throw new Error("리프레시 토큰이 없습니다. 다시 로그인해주세요.");
+  }
+
   const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
     method: "GET",
-    headers: {
-      ...getBearerAuthHeaders(),
-    },
+    headers,
   });
 
-  return parseApiResponse<RefreshResponse>(response);
+  const data = await parseApiResponse<RefreshResponse>(response);
+  saveAuthTokens(data);
+  return data;
 };

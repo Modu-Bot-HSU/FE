@@ -1,4 +1,9 @@
 @import "tailwindcss";
+@import "./styles/fonts.css";
+
+@theme {
+  --font-sans: "Season Mix", system-ui, sans-serif;
+}
 
 html,
 body,
