@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "../../../hooks/useForm";
 import { buildPersonalSignPayload, getNonce, normalizeWalletAddress } from "../../../apis/auth/auth";
@@ -12,12 +12,14 @@ export const useWalletLogin = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<LoginUiStep>("wallet");
   const [signingAddressRaw, setSigningAddressRaw] = useState("");
+  const [isAuthorizing, setIsAuthorizing] = useState(false);
+  const confirmInFlightRef = useRef(false);
   const { values, handleChange, setValues } = useForm({ walletAddress: "" });
   const loginMutation = useLoginMutation();
 
   const normalizedInput = () => normalizeWalletAddress(values.walletAddress.trim());
 
-  const connectMetaMask = async () => {
+  const connectMetaMask = useCallback(async () => {
     try {
       const accounts = (await ethereumRequest<string[]>(
         "eth_requestAccounts",
@@ -31,7 +33,7 @@ export const useWalletLogin = () => {
     } catch (e) {
       alertEthereumFlowError(e);
     }
-  };
+  }, [setValues]);
 
   const goToConfirm = async () => {
     const target = normalizedInput();
@@ -45,6 +47,10 @@ export const useWalletLogin = () => {
   };
 
   const confirmLogin = async () => {
+    if (confirmInFlightRef.current || isAuthorizing || loginMutation.isPending) {
+      return;
+    }
+
     const active = normalizeWalletAddress(signingAddressRaw);
 
     if (!active) {
@@ -52,6 +58,9 @@ export const useWalletLogin = () => {
       setStep("wallet");
       return;
     }
+
+    confirmInFlightRef.current = true;
+    setIsAuthorizing(true);
 
     try {
       const { nonce } = await getNonce({ walletAddress: active });
@@ -61,6 +70,9 @@ export const useWalletLogin = () => {
     } catch (e) {
       console.error(e);
       alertEthereumFlowError(e);
+    } finally {
+      confirmInFlightRef.current = false;
+      setIsAuthorizing(false);
     }
   };
 
@@ -72,8 +84,8 @@ export const useWalletLogin = () => {
     connectMetaMask,
     goToConfirm,
     confirmLogin,
-    isPending: loginMutation.isPending,
-    isNavigatingToConfirm: loginMutation.isPending,
+    isPending: isAuthorizing || loginMutation.isPending,
+    isNavigatingToConfirm: isAuthorizing || loginMutation.isPending,
     displayAddress: normalizedInput(),
     navigate,
   };

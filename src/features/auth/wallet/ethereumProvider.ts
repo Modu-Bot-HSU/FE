@@ -70,6 +70,12 @@ const isMobileWeb = () => {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 };
 
+const hasInjectedEthereum = () =>
+  typeof window !== "undefined" && Boolean(window.ethereum);
+
+const shouldPreferInjectedProvider = () =>
+  hasInjectedEthereum() && !isMobileWeb();
+
 const createClient = async () => {
   const { createEVMClient } = await import("@metamask/connect-evm");
 
@@ -123,6 +129,11 @@ export const ethereumRequest = async <T = unknown>(
   method: string,
   params?: unknown,
 ): Promise<T> => {
+  if (shouldPreferInjectedProvider()) {
+    const provider = window.ethereum as unknown as EthereumProviderLike;
+    return (await provider.request({ method, params })) as T;
+  }
+
   const client = await getMetaMaskConnectClient();
 
   if (client && method === "eth_requestAccounts") {
@@ -190,6 +201,27 @@ export const connectAndSignPersonal = async (
   message: string,
   expectedAddress?: string,
 ): Promise<{ account: string; signature: string }> => {
+  if (shouldPreferInjectedProvider()) {
+    const provider = window.ethereum as unknown as EthereumProviderLike;
+    const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
+    const account = String(accounts[0] ?? "").trim();
+
+    if (!account) {
+      throw new Error("메타마스크 계정을 찾을 수 없습니다.");
+    }
+
+    if (expectedAddress && account.toLowerCase() !== expectedAddress.toLowerCase()) {
+      throw new Error("입력한 지갑 주소와 메타마스크 선택 계정이 다릅니다.");
+    }
+
+    const signature = (await provider.request({
+      method: "personal_sign",
+      params: [message, account],
+    })) as string;
+
+    return { account, signature };
+  }
+
   const client = await getMetaMaskConnectClient();
 
   if (client) {
