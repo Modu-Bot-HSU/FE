@@ -110,9 +110,11 @@ export default function ProfilePage() {
         onLogout={() => setShowLogoutModal(true)}
       />
 
-      {showLogoutModal && (
-        <LogoutModal onCancel={() => setShowLogoutModal(false)} onConfirm={handleLogout} />
-      )}
+      <LogoutModal
+        open={showLogoutModal}
+        onCancel={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }
