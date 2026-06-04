@@ -1,12 +1,14 @@
+import AnimatedBottomSheet from "../../../components/common/AnimatedBottomSheet";
+
 type Props = {
+  open: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 };
 
-export default function LogoutModal({ onCancel, onConfirm }: Props) {
+export default function LogoutModal({ open, onCancel, onConfirm }: Props) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
+    <AnimatedBottomSheet open={open} onBackdropClick={onCancel} durationMs={280}>
       <div className="relative w-full max-w-[430px] rounded-t-3xl bg-white px-5 pt-6 pb-10 shadow-xl">
         <div className="mb-4 text-center">
           <p className="text-[17px] font-semibold text-[#002A47]">로그아웃 하시겠어요?</p>
@@ -29,6 +31,6 @@ export default function LogoutModal({ onCancel, onConfirm }: Props) {
           </button>
         </div>
       </div>
-    </div>
+    </AnimatedBottomSheet>
   );
 }

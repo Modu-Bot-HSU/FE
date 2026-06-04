@@ -1,4 +1,5 @@
 import type { Hex, MetamaskConnectEVM } from "@metamask/connect-evm";
+import { hasInjectedEthereum, isMobileWeb } from "../login/mobile";
 
 type EthereumProviderLike = {
   request: (args: { method: string; params?: unknown }) => Promise<unknown>;
@@ -65,19 +66,12 @@ let evmClientPromise: Promise<MetamaskConnectEVM> | null = null;
 
 const shouldUseMetaMaskConnect = () => import.meta.env.VITE_USE_METAMASK_CONNECT !== "false";
 
-const isMobileWeb = () => {
-  if (typeof navigator === "undefined") return false;
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-};
-
-const hasInjectedEthereum = () =>
-  typeof window !== "undefined" && Boolean(window.ethereum);
-
 const shouldPreferInjectedProvider = () =>
-  hasInjectedEthereum() && !isMobileWeb();
+  hasInjectedEthereum();
 
 const createClient = async () => {
   const { createEVMClient } = await import("@metamask/connect-evm");
+  const mobile = isMobileWeb();
 
   return createEVMClient({
     dapp: {
@@ -88,8 +82,10 @@ const createClient = async () => {
       supportedNetworks: SUPPORTED_NETWORKS,
     },
     ui: {
-      preferExtension: !isMobileWeb(),
-      showInstallModal: !isMobileWeb(),
+      // 모바일에서는 Extension 옵션 완전 비활성화 → QR/딥링크만 노출
+      preferExtension: !mobile,
+      showInstallModal: !mobile,
+      ...(mobile ? { extensionOnly: false } : {}),
     },
     mobile: {
       useDeeplink: true,

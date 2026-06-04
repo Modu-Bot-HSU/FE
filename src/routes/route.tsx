@@ -13,11 +13,13 @@ import DailyQHistoryPage from "../pages/daily-q/DailyQHistoryPage.tsx";
 import ProfilePage from "../pages/profile/ProfilePage.tsx";
 import Splash from "../pages/chat/Splash.tsx";
 import AdminPage from "../pages/admin/AdminPage.tsx";
+import GlobalErrorPage from "../pages/GlobalErrorPage.tsx";
 import { ProtectedRoute, PublicOnlyRoute } from "./protectedRoute.tsx";
 
 const routes = [
   {
     element: <AppShell />,
+    errorElement: <GlobalErrorPage />,
     children: [
       {
         path: "/",
