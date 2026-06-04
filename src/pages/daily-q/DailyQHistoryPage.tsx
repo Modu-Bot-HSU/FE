@@ -94,7 +94,7 @@ export default function DailyQHistoryPage() {
                   <div className="flex items-center gap-2">
                     <span>{formatDate(item.createdAt)}</span>
                     {item.status === "APPROVED" && (
-                      <span className="font-semibold text-[#fc5100]">+1 credits</span>
+                      <span className="font-semibold text-[#fc5100]">+10 Tokens</span>
                     )}
                   </div>
                 </div>
